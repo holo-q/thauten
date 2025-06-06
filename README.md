@@ -48,20 +48,23 @@ The phenomenon already happens naturally and is fully documented and evidenced s
 
 Thauten models are trained to "fold and unfold thought within themselves" — developing internal reasoning processes that can compress complex problems into symbolic representations and then unfold them into solutions.
 
-### 🎯 GRPO-Based Training
+### 🧠 Cognitive Seeding
 
-Using Generalized Reward Policy Optimization to push models beyond conventional reasoning plateaus by:
-- Targeting specific "minimax states" in weight-space
-- Dynamic reward shaping for cognitive development
-- Temperature spiking for exploration of novel reasoning paths
+The `<think>` tag is defined and generalized as a cognitive fence which seeds its intended internal structure at the genesis of reinforcement learning. It is effectively a prompt which implicates chains of thought and what the model thinks thinking should be.
 
-### 🧠 Cognitive Scaffolding
-
-Structured training using cognitive fences:
 - `<think>`: Intermediate reasoning steps
 - `<compress>`: Symbolic information compression
 - `<simulate>`: Predictive modeling
 - `<criticize>`: Self-evaluation and correction
+
+
+### 🎯 Cognitive Crystallization
+
+Reinforcement learning is defined as fundamentally a practice which crystallizes existing linguistic patterns, or nth-order potentialities further down the line. It is a particle accelerator which smashes atoms together and whatever maximizes the gravitational rule the most will clump together. Using this knowledge, we hope to push models beyond all conventional plateaus to achieve infinite scaling of intelligence, where the reinforcement learning rewards continue to scale to their information theoretic optima, and even past it.
+
+- Plateaus -> "minimax state" in weight-space created by the weight-lattice's equilibrium tension endured by its minimas and maximas under the torsion force of reward-steered gradient descent.   
+- Full weight mutations -> Training on LoRAs for non-destructive rewiring of the cognitive mechanic pool. 
+- Temperature -> spiking stochastically for exploration of novel reasoning paths, bootstrapping deep loom.
 
 ## Usage
 
@@ -86,7 +89,7 @@ cd rl
 uv sync
 ```
 
-### Experiment 1: Training Symbolic Compressor/Decompressor
+### 1. Compressor/Decompressor
 
 Training thauten models to develop internal symbolic languages:
 
@@ -102,18 +105,31 @@ uv run train_compressor.py
 
 This will start RL on Qwen-1.5B-R1-distill for semiotic compression and decompression. 
 
-### Experiment 2: Cognitive Fence Evolution
+### 2. Extensions
 
-Progressive development of reasoning capabilities:
+Progressive development of reasoning capabilities through extension fences and representation instrumentation:
 
-- **Bootstrap**: Start with basic `<think>` scaffolding
-- **Evolve**: Add complexity through `<compress>`, `<simulate>`, `<criticize>` fences
+1. `<compress>` a reality.
+2. `<dream>` an extension reality prime within the same compression-space, steered by the internal value-maximization heuristic. (dream/imagine/induct)
+3. `<think>` and reinforce for reasoning within the compression-space of the reality to deproject a geodesic descent which pathfind a bridge between `identity` and `identity+prime`. (think/pathfind/deduct)
+4. `<simulate>` the reality using an audit morphism.
+5. `<decompress>` back to english.
+
+Introduction and reinforcement over new cognitive operators leads to explosive recombination cascades. Other possibilities exist
+
+* `<split>`: binary split of a representation identity for maximum orthogonality, resulting in semantic stripping. This allows later fences to use a more useful compression origin optimized.
+* `<fuse>`: fuse two representations together with maximum interleaving.
+
 - **Recombine**: Train combinations like `<compress-think>` for advanced reasoning
 - **Verify**: Use Verifiers to validate reasoning quality and consistency
 
 TODO
 
-### Experiment 3: Mesa-Optimization
+### 3. Defragmentation
+
+Take an existing unstructured context window and compress it, learning to compress a context which contains already maximally compressed information and re-integrate english-space information into it. This is the same training task as `<compress>` but trained over a larger and more encompassing use-case, more than simple wikipedia-style paragraphs. This also trains the model to respond to the user query and understand it.
+
+### 3. Mesa-Optimization
 
 Advanced thauten models that optimize their own cognitive processes:
 
@@ -137,24 +153,33 @@ TODO
 
 ## Results and Evaluation
 
-Thauten models are evaluated on:
-- **Reasoning Benchmarks**: Performance on complex logical tasks
-- **Compression Efficiency**: Ability to represent information symbolically
-- **Cognitive Flexibility**: Success with novel cognitive fence combinations
-- **Meta-Learning**: Capability to evolve new reasoning strategies
+Thauten models will be evaluated on:
+
+- **Compression Efficiency**: Ability to represent information symbolically.
+- **Compression Flexibility**: Ability to invent compressed notations optimal for each domain.
+- **Reasoning Benchmarks**: Performance on complex logical tasks when working natively in compressed representations.
+- **Cognitive Flexibility**: Success with novel cognitive fence combinations.
+- **Meta-Learning**: Capability to evolve new reasoning strategies developped in context out of cognitive primitives we trained.
+
+This section with later demonstrate results and successes.
 
 ## Theoretical Foundation
 
 This project implements concepts from the Semiodynamics Framework. For comprehensive theoretical details, see [`docs/framework.md`](docs/framework.md).
+This project implements the first pillar of the [super-intelligence zip project](https://github.com/holo-q/zip/), head over to learn more.
 
 ## Contributing
 
-Contributions should focus on:
-- Novel GRPO training techniques
-- Cognitive fence design and optimization
-- Integration with Verifiers library
-- Experimental validation of reasoning capabilities
-- Analysis of emergent cognitive behaviors
+Since we are very short on resources, we will be infinitely grateful for any compute grant or resources contributed.
+All work and research produced by HOLO-Q will always remain open-source.
+
+Since all capabilities depend on the compression experiment's initial success, contributions should focus on
+training various different models with train-compressor.py and attempting to get a working prototype.
+This capability may only emerge in larger models!
+
+Contributions to the code should follow the style.
+Each training script should be high quality and user-friendly to make
+reproducing these experiments as confusion-free as possible in the future.
 
 ## Citation
 
