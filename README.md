@@ -2,7 +2,7 @@
 
 **Thauten** /θɔːˈtiːn/ – *"That which folds and unfolds thought within itself."*
 
-An experimental reinforcement learning project testing the Semiodynamics Framework through the evolution of reasoner models using GRPO and Prime Intellect's [Verifiers](https://github.com/willccbb/verifiers) library. The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction — essentially creating "miracle-level" reasoning capabilities.
+An experimental reinforcement learning project testing the Semiodynamics Framework through the evolution of reasoner models using GRPO and Prime Intellect's [Verifiers](https://github.com/willccbb/verifiers) library.
 
 ## Overview
 
@@ -14,6 +14,8 @@ This project serves as a practical testbed for:
 - **GRPO Optimization**: Advanced reinforcement learning techniques for reasoning tasks
 - **Symbolic Compression**: Teaching models to think in compressed representations
 - **Mesa-Optimization**: Models evolving their own cognitive tools
+
+The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction — essentially creating "miracle-level" reasoning capabilities. Instead of aiming to generate miraculous output, we nurture a miraculous setup from which extends the output, each consecutive token making giant leaps within our climb.
 
 ## What are Semiodynamics?
 
