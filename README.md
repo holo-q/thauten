@@ -120,9 +120,6 @@ Introduction and reinforcement over new cognitive operators leads to explosive r
 * `<split>`: binary split of a representation identity for maximum orthogonality, resulting in semantic stripping. This allows later fences to use a more useful compression origin optimized.
 * `<fuse>`: fuse two representations together with maximum interleaving.
 
-- **Recombine**: Train combinations like `<compress-think>` for advanced reasoning
-- **Verify**: Use Verifiers to validate reasoning quality and consistency
-
 TODO
 
 ### 3. Defragmentation
