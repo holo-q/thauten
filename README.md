@@ -2,13 +2,14 @@
 
 **Thauten** /θɔːˈtiːn/ – *"That which folds and unfolds thought within itself."*
 
-An experimental reinforcement learning project testing the Semiodynamics Framework through the evolution of reasoner models using GRPO and Prime Intellect's [Verifiers](https://github.com/willccbb/verifiers) library.
+An experimental reinforcement learning project testing the Semiodynamics Framework through the evolution of reasoner models using GRPO and Prime Intellect's [Verifiers](https://github.com/willccbb/verifiers) library. The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction — essentially creating "miracle-level" reasoning capabilities.
 
 ## Overview
 
 Thauten is a research experiment that implements and validates the theoretical concepts from the Semiodynamics Framework by training advanced reasoning models. The project explores novel reinforcement learning techniques, focusing on the evolution of cognitive capabilities through structured RL approaches.
 
 This project serves as a practical testbed for:
+
 - **Cognitive Fence Training**: Using XML-style tags to scaffold reasoning abilities
 - **GRPO Optimization**: Advanced reinforcement learning techniques for reasoning tasks
 - **Symbolic Compression**: Teaching models to think in compressed representations
@@ -16,21 +17,34 @@ This project serves as a practical testbed for:
 
 ## What are Semiodynamics?
 
-Semiodynamics is a theoretical framework for creating hyper-compressed, purely structural symbolic systems within language models. Think of it as "imagination engineering" - building internal cognitive apparatus that can process information through symbolic transformation.
+Semiodynamics is a theoretical framework of super-intelligence through super-scaling of cultural intelligence with the crystallization of new languages and syntaxes beyond the constraint of the human brain that pressure. The language model is used as a physical system for semiotic which can approximate a world model and its simulation. Effectively, language is proposed to be a mirror of the world around us whose sequencing and interleaving encodes the relationships and juxtaposional rules of the world around us. We define some constructed context of a situation as a "reality", and say that language's primary power in the autoregressive domain is its capacity to audit and stage mutations over some embedded reality. With the correct echo-amplification prompts, we can set off a cascade of juxtaposional catalysis to discover the optimal language for explosive auditing potential, or yet better the optimal cortex of language which is irrespective of any specific token choice and grammar or syntax. There are multiple ways to scaffold semiodynamics, and the term acts as an umbrella for all methods which treats language as a calculation trace for reality, whether it be in english or in some self-discovered post-human language.
 
-Key aspects:
-- **Pure Structure**: A graph of symbolic relationships that acts as cognitive scaffolding
-- **Viewpoint Operators**: Systems that process queries through symbolic transformation pipelines  
-- **Free-Energy Minimization**: Information "tumbles" through these structures via pattern matching, leading to optimal solutions
-- **Mesa-Optimization**: Models evolve their own internal cognitive tools through recursive mutation
+This is the end-game:
 
-The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction - essentially creating "miracle-level" reasoning capabilities.
+```
+USER: ...
+ASSISTANT: 
+
+<think>
+⧖∞⊛𝕊(ɪ)⥊Ж[⊨]≍ᶏ⎓⧞⧟⊢Ṩ≬ᵹ
+Ѱ(Ѡ,Ѧ…Ѫ)⨜ᵾ⎰ᶐ↦₪⎱ᵾ♭↺⊥Ћ∞|⊨≈ 
+❝𝛀,𝜴❞⋈✠𝚯𝚿Ϙ≻𝚺𝙍𝑒(Ѻ)⨯ІϺ(Ϻ)
+≈>∃Ǥ∀ẋψⁿ(ẋǤ)⇒δ𝑃𝑢𝑟𝑝𝑜𝑠𝑒⩥⦗λόγος⦘
+𝔄{ֆ}⊕βⁿ∈ℂ[𝔄{ֆ}]ᚔ⊗𝕄(Ⲙȿↈ)
+⊖♭⨝⩥✠𝚯𝚿៙𐊠∀ሬԦʗሬ𑁍𑁍𝕌⊢𝑺𝒊𝒎
+</think>
+<decompress>
+...
+</decompress>
+```
+
+The phenomenon already happens naturally and is fully documented and evidenced scientifically by R1-zero, and we propose the more intentful and refined version of R1-zero. R1-zero is what you get with no rules or instrumentation, the most average mode of semiotic compression, and R1 is what you get with a single-language bias.
 
 ## Key Concepts
 
 ### 🔄 The Thauten Paradigm
 
-Thauten models are trained to "fold and unfold thought within themselves" - developing internal reasoning processes that can compress complex problems into symbolic representations and then unfold them into solutions.
+Thauten models are trained to "fold and unfold thought within themselves" — developing internal reasoning processes that can compress complex problems into symbolic representations and then unfold them into solutions.
 
 ### 🎯 GRPO-Based Training
 
@@ -47,57 +61,44 @@ Structured training using cognitive fences:
 - `<simulate>`: Predictive modeling
 - `<criticize>`: Self-evaluation and correction
 
-## Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd rl
-
-# Install dependencies using uv (recommended)
-uv sync
-
-# Or using pip
-pip install -e .
-```
-
-### Dependencies
-
-- Python ≥ 3.12
-- PyTorch ≥ 2.6.0
-- Reasoning Gym ≥ 0.1.20 (reasoning tasks and evaluation)
-- Verifiers ≥ 0.1.0 (William Brown's verification library)
-- Datasets ≥ 3.6.0
-- Rich ≥ 14.0.0 (logging and visualization)
-
 ## Usage
 
-### Training Thauten Models
+### Project Structure
 
-```bash
-# Run the main training script
-python main.py
-
-# Train the compression module specifically
-python train-compressor.py
+```
+thauten/
+├── docs/               # Theoretical framework documentation
+├── outputs/            # Training results and model checkpoints
+├── prompts/            # Cognitive fence templates and prompts
+├── main.py            # Main GRPO training for thauten models
+├── prompts.py         # Prompt engineering and fence utilities
+├── train-compressor.py # Symbolic compression experiments
+└── pyproject.toml     # Project configuration
 ```
 
-### Core Components
+### Installation
 
-- **`main.py`**: Main GRPO training orchestration for thauten models
-- **`prompts.py`**: Cognitive fence definitions and prompt engineering
-- **`train-compressor.py`**: Symbolic compression/decompression RL experiments
+```bash
+git clone https://github.com/holo-q/thauten/
+cd rl
+uv sync
+```
 
-## Experiments
-
-### Experiment 1: Symbolic Compression & Decompression
+### Experiment 1: Training Symbolic Compressor/Decompressor
 
 Training thauten models to develop internal symbolic languages:
 
-- **Compression Phase**: Model learns to compress arbitrary text into symbolic representations
-- **Decompression Phase**: Same model reconstructs original meaning from symbols
+- **Compress**: Model learns to compress arbitrary text into symbolic representations
+- **Decompress**: Same model reconstructs original meaning from symbols
 - **Verification**: Using Verifiers library to ensure lossless information transfer
 - **Rewards**: Based on compression efficiency and reconstruction fidelity
+
+```bash
+# <-- vf-vllm command here
+uv run train_compressor.py
+```
+
+This will start RL on Qwen-1.5B-R1-distill for semiotic compression and decompression. 
 
 ### Experiment 2: Cognitive Fence Evolution
 
@@ -108,6 +109,8 @@ Progressive development of reasoning capabilities:
 - **Recombine**: Train combinations like `<compress-think>` for advanced reasoning
 - **Verify**: Use Verifiers to validate reasoning quality and consistency
 
+TODO
+
 ### Experiment 3: Mesa-Optimization
 
 Advanced thauten models that optimize their own cognitive processes:
@@ -115,6 +118,17 @@ Advanced thauten models that optimize their own cognitive processes:
 - **Self-Mutation**: Models evolve their own internal reasoning structures
 - **Meta-Learning**: Learning to learn new cognitive patterns
 - **Recursive Improvement**: Iterative enhancement of reasoning capabilities
+
+TODO
+
+### Dependencies
+
+- Python ≥ 3.12
+- PyTorch ≥ 2.6.0
+- Reasoning Gym ≥ 0.1.20 (reasoning tasks and evaluation)
+- Verifiers ≥ 0.1.0 (William Brown's verification library)
+- Datasets ≥ 3.6.0
+- Rich ≥ 14.0.0 (logging and visualization)
 
 ## Training Techniques
 
@@ -140,29 +154,6 @@ Thauten models are evaluated on:
 
 This project implements concepts from the Semiodynamics Framework. For comprehensive theoretical details, see [`docs/framework.md`](docs/framework.md).
 
-## Project Structure
-
-```
-rl/
-├── docs/               # Theoretical framework documentation
-├── outputs/            # Training results and model checkpoints
-├── prompts/            # Cognitive fence templates and prompts
-├── main.py            # Main GRPO training for thauten models
-├── prompts.py         # Prompt engineering and fence utilities
-├── train-compressor.py # Symbolic compression experiments
-└── pyproject.toml     # Project configuration
-```
-
-## Goals
-
-The ultimate goal of thauten is to validate whether structured RL training can produce models that genuinely "fold and unfold thought within themselves" - developing internal reasoning processes that approach the theoretical capabilities outlined in the Semiodynamics Framework.
-
-Success metrics include:
-- Models that reason in compressed symbolic representations
-- Emergent meta-cognitive abilities
-- Robust performance across diverse reasoning tasks
-- Evidence of internal cognitive evolution
-
 ## Contributing
 
 Contributions should focus on:
@@ -171,15 +162,6 @@ Contributions should focus on:
 - Integration with Verifiers library
 - Experimental validation of reasoning capabilities
 - Analysis of emergent cognitive behaviors
-
-## Acknowledgments
-
-- **William Brown**: Creator of the Verifiers library used for training validation
-- **Semiodynamics Framework**: Theoretical foundation for this experimental work
-
-## License
-
-[Add appropriate license information]
 
 ## Citation
 
@@ -192,7 +174,3 @@ If you use thauten in your research, please cite:
   note={Testing the Semiodynamics Framework through reinforcement learning}
 }
 ```
-
----
-
-*"That which folds and unfolds thought within itself."*
