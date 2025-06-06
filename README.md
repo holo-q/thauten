@@ -123,15 +123,6 @@ Advanced thauten models that optimize their own cognitive processes:
 
 TODO
 
-### Dependencies
-
-- Python ≥ 3.12
-- PyTorch ≥ 2.6.0
-- Reasoning Gym ≥ 0.1.20 (reasoning tasks and evaluation)
-- Verifiers ≥ 0.1.0 (William Brown's verification library)
-- Datasets ≥ 3.6.0
-- Rich ≥ 14.0.0 (logging and visualization)
-
 ## Training Techniques
 
 ### GRPO Optimization
