@@ -1,0 +1,6 @@
+Reconstruct the original content from this structured compressed representation. Expand abbreviations and symbols back to their full meaning.
+
+<compress>
+{compressed}
+</compress>
+<decompress> 

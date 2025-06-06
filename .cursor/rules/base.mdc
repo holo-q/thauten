@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+The _verifiers directory is included only for reference and is not used. It is actually added as a pip package to the venv.
+Ignore all linter errors unless explicitly asked to work on them.

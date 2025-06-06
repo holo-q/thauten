@@ -1,0 +1,6 @@
+Transform the following content into a freeform compressed representation using symbolic patterns, abbreviations, and creative notation that captures the essence efficiently.
+
+<input>
+{content}
+</input>
+<compress> 

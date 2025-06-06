@@ -1,0 +1,7 @@
+Expand the compressed reasoning and provide the full solution with detailed explanation.
+
+<compress>
+{compressed}
+</compress>
+<decompress>
+</rewritten_file> 

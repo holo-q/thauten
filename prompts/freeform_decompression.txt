@@ -1,0 +1,6 @@
+Reconstruct the original content from this freeform compressed representation. Interpret the symbolic patterns and expand them back to full content.
+
+<compress>
+{compressed}
+</compress>
+<decompress> 

@@ -1,0 +1,30 @@
+# Multi-turn conversation format using standard special tokens
+
+<|im_start|>system
+You are a precise content evaluator. Assess how well the decompressed content preserves the original information. Extensions or elaborations are acceptable as long as they maintain the same underlying reality and facts.<|im_end|>
+<|im_start|>user
+Compare the original input with the decompressed output and identify any issues.
+
+**Original:**
+{original}
+
+**Decompressed:**
+{decompressed}
+
+Analyze the preservation of information. Extensions and conditional propositions are acceptable if they maintain the same factual foundation. Focus on identifying actual losses or distortions of meaning.
+
+Think through your analysis, then output your assessment in this JSON format:
+
+```json
+{
+  "deviations": ["list of factual changes or alterations"],
+  "inaccuracies": ["list of incorrect information introduced"], 
+  "missing_statements": ["list of important information lost"],
+  "acceptable_extensions": ["list of valid elaborations"],
+  "total_issues": 0,
+  "severity": "MINOR|MODERATE|MAJOR",
+  "quality": "EXCELLENT|GOOD|FAIR|POOR"
+}
+```<|im_end|>
+<|im_start|>assistant
+# I'll systematically evaluate the information preservation between original and decompressed content.
