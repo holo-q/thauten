@@ -14,6 +14,18 @@ This project serves as a practical testbed for:
 - **Symbolic Compression**: Teaching models to think in compressed representations
 - **Mesa-Optimization**: Models evolving their own cognitive tools
 
+## What are Semiodynamics?
+
+Semiodynamics is a theoretical framework for creating hyper-compressed, purely structural symbolic systems within language models. Think of it as "imagination engineering" - building internal cognitive apparatus that can process information through symbolic transformation.
+
+Key aspects:
+- **Pure Structure**: A graph of symbolic relationships that acts as cognitive scaffolding
+- **Viewpoint Operators**: Systems that process queries through symbolic transformation pipelines  
+- **Free-Energy Minimization**: Information "tumbles" through these structures via pattern matching, leading to optimal solutions
+- **Mesa-Optimization**: Models evolve their own internal cognitive tools through recursive mutation
+
+The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction - essentially creating "miracle-level" reasoning capabilities.
+
 ## Key Concepts
 
 ### 🔄 The Thauten Paradigm
