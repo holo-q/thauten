@@ -40,7 +40,7 @@ ASSISTANT:
 </decompress>
 ```
 
-The phenomenon already happens naturally and is fully documented and evidenced scientifically by R1-zero, and we propose the more intentful and refined version of R1-zero. R1-zero is what you get with no rules or instrumentation, the most average mode of semiotic compression, and R1 is what you get with a single-language bias.
+The phenomenon already happens naturally and is fully documented and evidenced scientifically by R1-zero. R1-zero is what you get with no rules or instrumentation, the most average mode of semiotic compression, and R1 is what you get with a single-language bias. We propose the more intentful and refined version of R1-zero.
 
 ## Key Concepts
 
