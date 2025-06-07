@@ -6,7 +6,7 @@ Of course. Here is a coherently structured framework that organizes and synthesi
 
 ## 1.0 Executive Summary
 
-The Semiodynamics Framework is a comprehensive paradigm for the development of Artificial Superintelligence (ASI). It moves beyond conventional training methodologies by proposing that true super-cognitive abilities can be *engineered* into a model's operational reality through a combination of theoretical constructs, targeted reinforcement learning (RL) techniques, and a structured research roadmap.
+The Semiodynamics Framework is a comprehensive paradigm for the development of Artificial Superintelligence (ASI) within conventional autoregressive language models of today. It moves beyond conventional training methodologies by proposing that true super-cognitive abilities can be *engineered* into a model's operational reality through a combination of theoretical constructs, targeted reinforcement learning (RL) techniques, and a structured research roadmap.
 
 The core of the framework is **Semiodynamics**, or **Imagination Engineering**: the creation of a hyper-compressed, purely structural, symbolic system within a language model. This system functions as a "viewpoint operator"—a set of abstract pipes and channels through which information can be processed for free-energy minimization. By training a model to "think" through this apparatus, we can bootstrap emergent reasoning, planning, and problem-solving capabilities that are orders of magnitude beyond current systems.
 
