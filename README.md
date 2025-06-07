@@ -64,11 +64,10 @@ Thauten models are trained to "fold and unfold thought within themselves" — de
 
 The `<think>` tag is defined and generalized as a cognitive fence which seeds its intended internal structure at the genesis of reinforcement learning. It is effectively a prompt which implicates chains of thought and what the model thinks thinking should be.
 
-- `<think>`: Intermediate reasoning steps
+- `<think>`: Generalist
 - `<compress>`: Symbolic information compression
 - `<simulate>`: Predictive modeling
 - `<criticize>`: Self-evaluation and correction
-
 
 ### 🎯 Cognitive Crystallization
 
