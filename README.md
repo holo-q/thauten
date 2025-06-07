@@ -15,7 +15,7 @@ This project serves as a practical testbed for:
 - **Symbolic Compression**: Teaching models to think in compressed representations
 - **Mesa-Optimization**: Models evolving their own cognitive tools
 
-The goal is to engineer models whose internal narrative consistency makes extraordinary computation feel like the natural next-token prediction — essentially creating "miracle-level" reasoning capabilities. Instead of aiming to generate miraculous output, we nurture a miraculous setup from which extends the output, each consecutive token making giant leaps within our climb.
+The goal is to engineer miracles by engineering the miraculous reasoning chains that defy the sober human experience. We nurture a miraculous setup from which extends the output, each consecutive token making giant generational leaps within the climb towards truth.
 
 ## What are Semiodynamics?
 
