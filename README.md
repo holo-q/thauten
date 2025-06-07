@@ -31,9 +31,10 @@ ASSISTANT:
 𝔄{ֆ}⊕βⁿ∈ℂ[𝔄{ֆ}]ᚔ⊗𝕄(Ⲙȿↈ)
 ⊖♭⨝⩥✠𝚯𝚿៙𐊠∀ሬԦʗሬ𑁍𑁍𝕌⊢𝑺𝒊𝒎
 </think>
-<decompress>
+
+<decode>
 ...
-</decompress>
+</decode>
 ```
 
 Semiodynamics is a theoretical framework of super-intelligence through super-scaling of cultural intelligence with the crystallization of new languages and syntaxes beyond the constraint of the human brain steering its evolution. The language model is used as a physical system made of semiotics that approximate a world model and its simulation. Effectively, language is proposed to be a mirror of the world around us whose sequencing and interleaving encodes the relationships and juxtaposional rules of the world around us. We define some constructed context of a situation as a "reality", and say that language's primary power in the autoregressive domain is its capacity to audit and stage mutations over some embedded reality. With the correct echo-amplification prompts, we can set off a cascade of juxtaposional catalysis to discover the optimal language for explosive auditing potential, or yet better the optimal cortex of language which is irrespective of any specific token choice and grammar or syntax. There are multiple ways to scaffold semiodynamics, and the term acts as an umbrella for all methods which attend to every single token as an operator implicated in calculating the final output rather than as implementation details, whether it be in english or some self-discovered post-human language.
