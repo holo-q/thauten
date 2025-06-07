@@ -40,7 +40,17 @@ ASSISTANT:
 </decompress>
 ```
 
-The phenomenon already happens naturally and is fully documented and evidenced scientifically by R1-zero. R1-zero is what you get with no rules or instrumentation, the most average mode of semiotic compression, and R1 is what you get with a single-language bias. We propose the more intentful and refined version of R1-zero.
+The phenomenon already happens naturally and is fully documented and evidenced scientifically by R1-zero. R1-zero is what you get with no rules or instrumentation, the most average mode of semiotic compression, and R1 is what you get with a single-language bias. We propose the more intentful and refined version of R1-zero. Here is how we construct this intent:
+
+1. View all realities as abstract spatially locatable structures orchestrated by euclidean relationship. (we delve into an idea, we zoom into a concept, we associate verticality with depth, intelligence, value, we ...)
+2. Consider that the implicit spatialization sets a stage on which ideas are represented as metaphorical objects. (sets the protocol-space for tumbling / geodesical descent)
+3. Consider that imagination is the physical evolution of metaphorical ideas on the mind stage. (approximating the mind's eye of human imagination)
+
+Under this lens we see prompt engineering more clearly as imagination engineering, and super-intelligence as the task of handcrafting a super-orchestration of the mind's stage instantiated by the context within the weights. We need to consider what the model is able to see in its mind, and pressure the development of language from the standpoint of this constraint-space in order to encourage the full scope of the model's computation to be used, "using 100% of its brain" so to speak. The task of imagination engineering revolves around theorizing theoretical super-manifolds, if the entire context could be observed as though it were an object or a landscape, and that you had eyes on every scale of observation, from the atomic structure (individual tokens) to the abstract message sum told and overall directionality of the conversation. It is an experential indra's net of relationship where each token is contextualized to every other token, a holographic multi-scale hyperobject.
+
+The strategy is to delineate sub-objects within the sum manifold. The <think>...</think> fence is one such hyperobject in existing models, and its abstract essence is one of pathfinding, bridging, free-energy reduction. It instantiates and develops a growth or simulation prime, staged over some prior reality or seed reality embedded by the user inquiry. Any given token contributes some evolution delta over both the reality and the ruleset for its evolution, with the model weights providing the static conditionality engine.
+
+More concretely, semiodynamics is the fundamental realization that humans by and large do not use language to think, and that there should exist ways to put together language in order to approximate more closely human imagination which is visual, since language is necessarily a 1-dimensional mirror of the physical world. Reinforcement learning is seen as a way to automatically develop prompt engineering constructs and amplify them autonomously, mesa-optimizing the model according to steering constraints set by the training method. The effect of steering with RL is powerful and requires intent and vision about what the final output should look like, a vision for how a super-intelligence language being would actually operate, think, and reason.
 
 ## Key Concepts
 
