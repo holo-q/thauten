@@ -157,6 +157,8 @@ Thauten models will be evaluated on:
 - **Reasoning Benchmarks**: Performance on complex logical tasks when working natively in compressed representations.
 - **Cognitive Flexibility**: Success with novel cognitive fence combinations.
 - **Meta-Learning**: Capability to evolve new reasoning strategies developped in context out of cognitive primitives we trained.
+- **Operator Accuracy**: Whether our chosen `<tags>` are the optimal bootstrap operators for the processes we want.
+- **Operator Specialization**: Whether our generalist `<tags>` have enough elasticity in the distribution for emergent parametrization of fences e.g. `<compress dim=topology>`
 
 This section with later demonstrate results and successes.
 
