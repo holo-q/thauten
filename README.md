@@ -26,11 +26,11 @@ RL goes like this:
 4. _[optional]_ Contexts (A) and (B) are rewritten so the user message is the simplest possible operator usage pattern ("compress/decompress this")
 5. Apply GRPO to rollouts and backpropagate gradients for contexts (A) and (B), rewarding shorter compression length whilst factoring in (C)'s penalties.,
 
-**Compression in base GPT-4**
-![image](https://github.com/user-attachments/assets/a840741b-9536-4912-b4a6-69d06df396de)
+**Demonstration in GPT-4**
 
-**Decompression in base GPT-4**
-![image](https://github.com/user-attachments/assets/c12b5254-392b-49d7-9495-d57b1ff206c4)
+Compress                                                                                      |                                             Decompress
+:--------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:
+![image](https://github.com/user-attachments/assets/a840741b-9536-4912-b4a6-69d06df396de)  |  ![image](https://github.com/user-attachments/assets/c12b5254-392b-49d7-9495-d57b1ff206c4)
 
 ### 2. Transfer Learning
 
