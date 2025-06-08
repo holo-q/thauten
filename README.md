@@ -12,11 +12,11 @@ This project researches the first pillar of the [super-intelligence zip project]
 
 Training LLMs to develop internal symbolic languages for compression.
 
-- **Compress**: Model learns to compress arbitrary text into symbolic representations
-- **Decompress**: Same model reconstructs original meaning from symbols
-- **Rewards**: Based on compression efficiency, reconstruction fidelity, and embedding varentropy metrics. 
+- `<compress>`: Model learns to compress arbitrary text into symbolic representations
+- `<decompress>`: Same model reconstructs original english meaning from symbols
+- Reward compression efficiency, reconstruction fidelity, and embedding varentropy metrics that pressure towards saturating the available semantic bandwidth. 
 
-The RL process goes like this:
+RL goes like this:
 
 1. Context (A): User message asks model to compress a given sample of information pulled at random from a dataset. Assistant replies and is prefixed with <compress> similar to training a reasoner where the output is prefixed with <think>.,
 2. Context (B): User message asks model to decompress the given output from (A). Assistant replies with information in english,
