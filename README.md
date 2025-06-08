@@ -8,22 +8,21 @@ An experimental reinforcement learning project testing the Semiodynamics Framewo
 
 This project researches the first pillar of the [super-intelligence zip project](https://github.com/holo-q/zip/), which is the prompt engineering meta.
 
-### 1. Compressor/Decompressor
+### 1. Information Compressor
 
-Training thauten models to develop internal symbolic languages:
+Training LLMs to develop internal symbolic languages for compression.
 
 - **Compress**: Model learns to compress arbitrary text into symbolic representations
 - **Decompress**: Same model reconstructs original meaning from symbols
-- **Verification**: Using Verifiers library to ensure lossless information transfer
-- **Rewards**: Based on compression efficiency and reconstruction fidelity
+- **Rewards**: Based on compression efficiency, reconstruction fidelity, and embedding varentropy metrics. 
+
+The RL process goes like this:
 
 1. Context (A): User message asks model to compress a given sample of information pulled at random from a dataset. Assistant replies and is prefixed with <compress> similar to training a reasoner where the output is prefixed with <think>.,
 2. Context (B): User message asks model to decompress the given output from (A). Assistant replies with information in english,
 3. Context (C): user message asks some other unrelated static model to compare initial sample to decompressed sample, and produce a list of deviations and inaccuracies.,
 4. _[optional]_ Contexts (A) and (B) are rewritten so the user message is the simplest possible operator usage pattern ("compress/decompress this")
 5. Apply GRPO to rollouts and backpropagate gradients for contexts (A) and (B), rewarding shorter compression length whilst factoring in (C)'s penalties.,
-
-This will start RL on Qwen-1.5B-R1-distill for semiotic compression and decompression. 
 
 ### 2. Transfer Learning
 
