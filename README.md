@@ -17,11 +17,6 @@ Training thauten models to develop internal symbolic languages:
 - **Verification**: Using Verifiers library to ensure lossless information transfer
 - **Rewards**: Based on compression efficiency and reconstruction fidelity
 
-```bash
-# <-- vf-vllm command here
-uv run train_compressor.py
-```
-
 1. Context (A): User message asks model to compress a given sample of information pulled at random from a dataset. Assistant replies and is prefixed with <compress> similar to training a reasoner where the output is prefixed with <think>.,
 2. Context (B): User message asks model to decompress the given output from (A). Assistant replies with information in english,
 3. Context (C): user message asks some other unrelated static model to compare initial sample to decompressed sample, and produce a list of deviations and inaccuracies.,
@@ -151,6 +146,12 @@ thauten/
 git clone https://github.com/holo-q/thauten/
 cd rl
 uv sync
+```
+
+Training for semiotic compression:
+```bash
+# <-- vf-vllm command here
+uv run train_compressor.py
 ```
 
 ## Training Techniques
