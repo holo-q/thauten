@@ -10,6 +10,8 @@ This project researches the first pillar of the [super-intelligence zip project]
 
 ### 1. Information Compressor
 
+![image](https://github.com/user-attachments/assets/a840741b-9536-4912-b4a6-69d06df396de)
+
 Training LLMs to develop internal symbolic languages for compression.
 
 - `<compress>`: Model learns to compress arbitrary text into symbolic representations
