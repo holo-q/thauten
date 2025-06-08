@@ -113,9 +113,15 @@ Training thauten models to develop internal symbolic languages:
 uv run train_compressor.py
 ```
 
+1. Context (A): User message asks model to compress a given sample of information pulled at random from a dataset. Assistant replies and is prefixed with <compress> similar to training a reasoner where the output is prefixed with <think>.,
+2. Context (B): User message asks model to decompress the given output from (A). Assistant replies with information in english,
+3. Context (C): user message asks some other unrelated static model to compare initial sample to decompressed sample, and produce a list of deviations and inaccuracies.,
+4. _[optional]_ Contexts (A) and (B) are rewritten so the user message is the simplest possible operator usage pattern ("compress/decompress this")
+5. Apply GRPO to rollouts and backpropagate gradients for contexts (A) and (B), rewarding shorter compression length whilst factoring in (C)'s penalties.,
+
 This will start RL on Qwen-1.5B-R1-distill for semiotic compression and decompression. 
 
-### 2. Extensions
+### 2. Transfer Learning
 
 Progressive development of reasoning capabilities through extension fences and representation instrumentation:
 
@@ -130,9 +136,11 @@ Introduction and reinforcement over new cognitive operators leads to explosive r
 * `<split>`: binary split of a representation identity for maximum orthogonality, resulting in semantic stripping. This allows later fences to use a more useful compression origin optimized.
 * `<fuse>`: fuse two representations together with maximum interleaving.
 
-TODO
+### 3. Topological Integrator
 
-### 3. Defragmentation
+Train an agent which navigates around a large codebase to quickly construct a compressed topological representation of a large codebase. The model doesn't have to view every single file because code fragments can be referenced all over the place. The model has to learn how to navigate the codebase optimally whilst growing its compressed topological representation, integrating as much information as it needs for a given task as quickly as possible. The optimal method may combine `representation'` primes that audit an existing compressed representation, and then intermittently folding them together with the defragmentator in the next section. This allows the optimal 'just middle' for total number of tokens emitted to amount of information compressed. This reinforcement phase develops the model's ability to create a rich index as quickly as possible. The model is trained to reduce the amount of guess-work or theory-crafting after expending a token budget alloted to explore the codebase and run commands, evaluated in a context (C)  similar to the compressor training. 
+
+### 4. Defragmentation
 
 Take an existing unstructured context window and compress it, learning to compress a context which contains already maximally compressed information and re-integrate english-space information into it. This is the same training task as `<compress>` but trained over a larger and more encompassing use-case, more than simple wikipedia-style paragraphs. This also trains the model to respond to the user query and understand it.
 
