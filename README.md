@@ -10,9 +10,9 @@ This project researches the first pillar of the [super-intelligence zip project]
 
 ### 1. Information Compressor
 
+English is a programming language whose linguistic operators are used to punch in embeddings and hidden states. The goal of this experiment is to find the saturation limit of embedding bandwidth. How few tokens does it take to represent any given piece of information? Can we rearrange the polysemy of our tokens to maximize the amount of embedding bandwidth they activate?
 
-
-Training LLMs to develop internal symbolic languages for compression.
+Let us train LLMs to develop internal symbolic languages for compression:
 
 - `<compress>`: Model learns to compress arbitrary text into symbolic representations
 - `<decompress>`: Same model reconstructs original english meaning from symbols
