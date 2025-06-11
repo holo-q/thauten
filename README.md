@@ -14,7 +14,7 @@ English is a programming language whose linguistic operators are used to punch i
 
 Let us train LLMs to develop internal symbolic languages for compression:
 
-- `<compress>`: Model learns to compress arbitrary text into symbolic representations
+- `<compress>`: Model learns to compress underlying meaning/message of arbitrary text samples (wikipedia articles, code, etc.) into symbolic representations.
 - `<decompress>`: Same model reconstructs original english meaning from symbols
 - Reward compression efficiency, reconstruction fidelity, and embedding varentropy metrics that pressure towards saturating the available semantic bandwidth. 
 
