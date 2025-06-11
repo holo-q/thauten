@@ -26,6 +26,8 @@ RL goes like this:
 4. _[optional]_ Contexts (A) and (B) are rewritten so the user message is the simplest possible operator usage pattern ("compress/decompress this")
 5. Apply GRPO to rollouts and backpropagate gradients for contexts (A) and (B), rewarding shorter compression length whilst factoring in (C)'s penalties.,
 
+The SFT or prompting heuristic may require its own parallel evolution so that the optimal packing can be discovered. Models have the ability to do base64 compression, which non-trivially compresses numerical lists into a non-numerical pattern, and therefore highly likely to be in high-frequency loom space which requires explicit prompting. If the model is allowed to `<think>` before compression this can help, but it can also equally hurt the model through over-reasoning away from base intuitions.
+
 **Demonstration in GPT-4**
 
 Compress                                                                                      |                                             Decompress
