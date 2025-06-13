@@ -10,11 +10,23 @@ This project researches the first pillar of the [super-intelligence zip project]
 
 ### 1. Information Compressor
 
+English is a programming language whose linguistic operators are used to punch in embeddings and hidden states. The goal of this experiment is to find the saturation limit of embedding bandwidth. How few tokens does it take to represent any given piece of information? Can we rearrange the polysemy of our tokens to maximize the amount of embedding bandwidth they activate?
+
+Let us train LLMs to develop internal symbolic languages for compression:
+
+- `<compress>`: Model learns to compress underlying meaning/message of arbitrary text samples (wikipedia articles, code, etc.) into symbolic representations.
+- `<decompress>`: Same model reconstructs original english meaning from symbols
+- Reward compression efficiency, reconstruction fidelity, and embedding varentropy metrics that pressure towards saturating the available semantic bandwidth. 
+
+RL goes like this:
+
 1. Context (A): User message asks model to compress a given sample of information pulled at random from a dataset. Assistant replies and is prefixed with <compress> similar to training a reasoner where the output is prefixed with <think>.,
 2. Context (B): User message asks model to decompress the given output from (A). Assistant replies with information in english,
 3. Context (C): user message asks some other unrelated static model to compare initial sample to decompressed sample, and produce a list of deviations and inaccuracies.,
 4. _[optional]_ Contexts (A) and (B) are rewritten so the user message is the simplest possible operator usage pattern ("compress/decompress this")
 5. Apply GRPO to rollouts and backpropagate gradients for contexts (A) and (B), rewarding shorter compression length whilst factoring in (C)'s penalties.,
+
+The SFT or prompting heuristic may require its own parallel evolution so that the optimal packing can be discovered. Models have the ability to do base64 compression, which non-trivially compresses numerical lists into a non-numerical pattern, and therefore highly likely to be in high-frequency loom space which requires explicit prompting. If the model is allowed to `<think>` before compression this can help, but it can also equally hurt the model through over-reasoning away from base intuitions.
 
 **Demonstration in GPT-4**
 
