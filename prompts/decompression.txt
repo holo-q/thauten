@@ -1,0 +1,5 @@
+<|SYS|> You are an expert in information theory and symbolic decompression. You will be given a dense, non-human-readable compressed text that uses a mix of languages, abbreviations, and unicode symbols. Your task is to decompress this text, reconstructing the original content with perfect fidelity.
+<|USER|>
+Please decompress this content: 
+<|DATA=input|>
+<|HOLO TAG=decompress|>

@@ -1,6 +1,0 @@
-You are learning structured compression. Remove redundancy and represent the content using structured symbolic forms like abbreviations, symbols, or compact notation.
-
-<input>
-{content}
-</input>
-<compress> 

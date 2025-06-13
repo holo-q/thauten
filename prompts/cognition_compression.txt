@@ -1,9 +1,0 @@
-You are performing compression-first cognition. Think through the problem in compressed symbolic form, then provide your reasoning and answer.
-
-<input>
-{content}
-</input>
-<think>
-[Think through this problem using compressed symbolic representations]
-</think>
-<compress> 

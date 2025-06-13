@@ -12,9 +12,13 @@ dependencies = [
  "datasets>=3.6.0",
  "reasoning-gym>=0.1.20",
  "rich>=14.0.0",
- "torch>=2.6.0",
+ "torch",
  "verifiers>=0.1.0",
+ "ruff",
 ]
 
 [tool.setuptools]
 py-modules = ["main", "prompts", "train-compressor"]
+
+[tool.ruff]
+lint.ignore = ["F541"]
