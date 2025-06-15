@@ -31,17 +31,17 @@ The DSL uses a tag-based system with the `<|...|>` delimiter.
 
 - Special Tags:
   - `---`: Clears the context to simulate multiple conversations.
+  - `---`: Like --- but marks the next conext for training.
 
 The parser converts a prompt file into a structured `PromptTemplate` object,
 which contains a sequence of nodes representing the parsed DSL.
 """
-
 import logging
 import os
 import re
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from rich.console import Group
 from rich.rule import Rule
@@ -61,6 +61,7 @@ class Node:
 @dataclass
 class ContextResetNode(Node):
     """Reset the context."""
+    train = True
 
 @dataclass
 class RoleNode(Node):
@@ -103,6 +104,20 @@ class PromptTemplate:
     Contains a sequence of nodes that define the entire prompt and its metadata.
     """
     nodes: list[PromptNode] = field(default_factory=list)
+
+    @property
+    def trained_contexts(self) -> list[int]:
+        """Returns a list of indices where context resets occur."""
+        contexts = []
+        current = 0
+        for i, node in enumerate(self.nodes):
+            if isinstance(node, ContextResetNode):
+                if i > 0: # if theres no context reset on the first line, then it's implicit
+                    current += 1
+                if node.train:
+                    contexts.append(current)
+
+        return contexts
 
     def to_rich_debug(self):
         """Format the prompt template nodes for rich debug display."""
@@ -308,6 +323,10 @@ class PromptLibrary:
                 out.append(ContextResetNode())
                 return
 
+            if tag == '===':
+                out.append(ContextResetNode())
+                return
+
             if ':' not in tag and not tag_upper.startswith(('USER', 'HOLO', 'SYS')):
                 out.append(ObjNode(var_id=tag, var_attributes=fence_attrs))
                 return
@@ -441,7 +460,7 @@ class PromptLibrary:
 
                 # Store node text to env
                 if node.id:
-                    env[node.id] = output or text
+                    env[node.id] = output
 
             if text:
                 if not msg:

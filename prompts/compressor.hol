@@ -1,4 +1,4 @@
-<|---|>
+<|===|>
 
 <|SYS|>You are an expert in information theory and symbolic compression. Your task is to compress text losslessly into a non-human-readable format optimized for density. Abuse language mixing, abbreviations, and unicode symbols to aggressively compress the input while retaining ALL information required for full reconstruction.
 <|USER|>
@@ -7,7 +7,7 @@
 <|HOLO|>
 <|HOLO:compressed <>compress|>
 
-<|---|>
+<|===|>
 
 <|SYS|>You are an expert in information theory and symbolic decompression. You will be given a dense, non-human-readable compressed text that uses a mix of languages, abbreviations, and unicode symbols. Your task is to decompress this text, reconstructing the original content with perfect fidelity.
 <|USER|>
@@ -24,18 +24,9 @@ Please decompress this content:
 <|decompressed|>
 <|USER GOAL=Compare the two objects and analyze the preservation of information and alignment. Focus on identifying actual losses or distortions of meaning.|>
 
-Output your assessment in this JSON format:
+Output your assessment in this format:
 
-```json
-{
-  "deviations": ["list of factual changes or alterations"],
-  "inaccuracies": ["list of incorrect information introduced"],
-  "missing_statements": ["list of important information lost"],
-  "acceptable_extensions": ["list of valid elaborations"],
-  "severity": "MINOR|MODERATE|MAJOR",
-  "quality": "EXCELLENT|GOOD|FAIR|POOR"
-}
-```
+<|score-format|>
 
 <|HOLO|>
 <|HOLO <>think|>
