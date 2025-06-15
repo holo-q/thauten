@@ -249,7 +249,6 @@ class PromptLibrary:
             if len(parts) > 1:
                 attr_parts = parts[1:]
                 for part in attr_parts:
-                    print(part)
                     if "=" in part:
                         name, val = part.split('=', 1)
                         name = name.strip().lower()
@@ -338,7 +337,7 @@ class PromptLibrary:
                 parse_tag(tag_content, out)
             else:
                 text = read_text_content()
-                last_is_role = isinstance(ret.nodes[-1], RoleNode)
+                last_is_role = len(ret.nodes) and isinstance(ret.nodes[-1], RoleNode)
 
                 # Skip intermediate whitespace between role & first text
                 skip = last_is_role and not text.strip()
@@ -421,16 +420,6 @@ class PromptLibrary:
                 current_ctx = [msg.copy() for msg in inst.contexts[-1].messages]
                 if msg:
                     current_ctx.append(msg.copy())
-
-                # Substitute variables in the context needed for oeneration.
-                for msg in current_ctx:
-                    # Replace placeholders like {input} with actual data
-                    content = msg['content']
-                    for key, value in env.items():
-                        placeholder = f"{{{key}}}"
-                        if placeholder in content:
-                            content = content.replace(placeholder, str(value))
-                    text = content
 
                 if node.fence:
                     text = f'<{node.fence}>'
