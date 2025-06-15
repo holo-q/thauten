@@ -200,7 +200,7 @@ def execute_dry_run():
     )
     c.print(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
-def train_compressor(model_path: str, base_model_name: str):
+def train_compressor(model_path: str):
     """Train the compressor model in a single stage."""
 
     # --- Training Configuration ---
@@ -218,7 +218,7 @@ def train_compressor(model_path: str, base_model_name: str):
 
     # Step 2: Training Configuration
     c.print(f"[cyan]⚙️ Configuring training...[/]")
-    grpo_args = vf.grpo_defaults(run_name=f"compressor-{base_model_name.split('/')[-1].lower()}")
+    grpo_args = vf.grpo_defaults(run_name=f"compressor-{model_path.split('/')[-1].lower()}")
     grpo_args.num_iterations = num_iterations
     grpo_args.output_dir = "outputs/compressor"
     # train_args.max_prompt_length = 4096 * 2
@@ -278,6 +278,7 @@ def train_compressor(model_path: str, base_model_name: str):
     compressor_env = HolowareEnv("compressor.hol", train_dataset, 'text',
         score_class=FidelityEvaluation,
         eval_dataset=eval_dataset,
+        eval_model=model_path,
         alpha=alpha,
         beta=beta,
         max_concurrent=8,
@@ -317,6 +318,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Symbolic Compressor Training")
     parser.add_argument("--dry-run", action="store_true", help="Run in dry run mode to see generated contexts without training.")
+    parser.add_argument("--model-path", type=str, default="Qwen/Qwen3-4B", help="The path to the model to train.")
     args = parser.parse_args()
 
     # Clear screen for full-screen experience
@@ -324,24 +326,21 @@ def main():
     c.print(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
 
     # --- Model Configuration ---
-    base_model_name = "Qwen/Qwen2.5-7B-Instruct"
-
+    # Determine data_key for the dry run env
     if args.dry_run:
-        # Determine data_key for the dry run env
         execute_dry_run()
         return
 
     # --- Normal Training Flow ---
     # Starting model
-    current_model_path = base_model_name
-    c.print(f"[dim]Base model: {base_model_name}[/]")
+    c.print(f"[dim]Base model: {args.model_path}[/]")
     c.print(Rule(style="dim"))
     c.print()
 
     os.makedirs("outputs", exist_ok=True)
 
     try:
-        final_model_path = train_compressor(current_model_path, base_model_name)
+        final_model_path = train_compressor(args.model_path)
 
         # Final completion with full-screen effect
         c.print(Rule("[bold green]🏆 TRAINING COMPLETED", style="green"))
