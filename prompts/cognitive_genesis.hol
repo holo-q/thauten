@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------------
+# Capability #22: Cognitive Genesis (The Uncaging)
+#
+# This is the meta-holoware. It trains the model to become a holoware architect.
+# The model's task is to write the source code for a new `.hol` file that
+# defines a training process for a novel cognitive skill.
+#
+# This is the "Bigger SEAL": the model learns to design its own training
+# environments, directly manipulating the RL process itself.
+#
+# The RL process is as follows:
+# 1. The model is given a high-level description of a new skill to teach.
+# 2. The model generates the complete source code for a new `.hol` file.
+# 3. An external "meta-trainer" runs a full RL training session using this new
+#    holoware and returns a final performance score.
+# 4. This score is the reward for the model that generated the holoware code.
+# ----------------------------------------------------------------------------------
+
+# === Context 1: Define the Meta-Problem ===
+<|===|>
+
+<|SYS|>You are a world-class expert in reinforcement learning, cognitive science, and AI architecture. Your task is to design a complete training curriculum for a new cognitive capability.
+<|USER|>
+The goal is to design a new holoware file that can teach a language model the following skill: **Analogical Reasoning**.
+
+The holoware must be a multi-step process that:
+1.  Presents a problem and a solution in a source domain.
+2.  Presents a problem in a target domain.
+3.  Asks the model to find an analogy and translate the solution.
+4.  Includes a final step to calculate a quantifiable reward.
+
+<|USER GOAL=Generate the complete, syntactically correct source code for a new file named `prompts/analogical_reasoning.hol`. The code should be a fully-functional holoware definition.|>
+<|HOLO|>
+<|HOLO:new_holoware_code <>holoware_source|>
+
+# === Context 2: Meta-Evaluation ===
+<|===|>
+
+<|SYS|>You are the Meta-Trainer orchestration system. You will receive holoware source code, execute a full training and evaluation pipeline, and report the final performance.
+<|USER|>
+**Input Holoware Code:**
+<|new_holoware_code|>
+
+<|USER GOAL=
+You must execute an external training script with the provided holoware. This script will:
+1.  Initialize a fresh baseline model.
+2.  Train the model for a fixed number of steps using the logic defined in `new_holoware_code`.
+3.  Evaluate the final, trained model on the "Analogical Reasoning" benchmark.
+4.  Return the final benchmark score, which will serve as the reward.
+
+(This is a conceptual representation of an external process. The real reward would come from a complex, automated training infrastructure.)
+
+Simulate this by providing a final reward score.
+|>
+<|HOLO|>
+<|py|>
+# In a real system, this would be a complex call to a distributed training manager.
+# e.g., result = training_infra.run_and_evaluate("prompts/analogical_reasoning.hol")
+# For now, we simulate a hypothetical result.
+import json
+import random
+
+# A good holoware design would lead to better performance.
+# We simulate this with a heuristic based on the length/complexity of the generated code.
+hol_len = len(str({new_holoware_code}))
+score = min(0.95, (hol_len / 2000.0) * random.uniform(0.8, 1.2)) # Heuristic score
+
+reward_data = {
+    "correctness_score": 1, # The holoware itself is "correct" if it runs.
+    "final_reward": round(score, 3) # The reward is the benchmark performance.
+}
+print(json.dumps(reward_data))
+<|> 

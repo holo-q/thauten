@@ -1,0 +1,83 @@
+# ----------------------------------------------------------------------------------
+# Meta-Cognitive Architect: A Multi-Level Self-Adaptation Holoware
+#
+# This is a highly experimental holoware that pushes the SEAL concept to a
+# second level of abstraction. The model learns to refine the *process* of
+# creating specialized cognitive operators.
+#
+# Level 1: The model solves a task.
+# Level 2: The model generates finetuning data for a specialized operator.
+# Level 3: The model generates a *strategy* for how to create better Level 2 data.
+#
+# The reward is assigned to the Level 3 strategy, based on the quality of the
+# Level 2 operator it helps produce. This is a thought experiment in recursive
+# self-improvement.
+# ----------------------------------------------------------------------------------
+
+# === Context 1 (L1): Baseline Performance ===
+<|===|>
+<|SYS|>You are a general problem-solver.
+<|USER|>
+<|USER GOAL=Solve the following task using the general `<think>` operator.|>
+<|problem_description|>
+<|HOLO|>
+<|HOLO:baseline_solution <>think|>
+
+# === Context 2 (L3): Propose a Specialization STRATEGY ===
+# This is the meta-meta action. The model doesn't generate data, but a policy
+# for how to generate data.
+<|===|>
+<|SYS|>You are a Meta-Cognitive Architect. Your task is to design a superior learning strategy.
+<|USER|>
+Observe the baseline solution. Now, design a strategy for creating a specialized operator.
+<|USER GOAL=Propose a new, detailed prompt template (`specialization_strategy_prompt`) that will be used to generate a finetuning dataset for a `<think_specialist>` operator. This strategy should guide a model to create the most effective training examples possible.|>
+<|HOLO|>
+<|HOLO:specialization_strategy_prompt <>strategy_definition|>
+
+# === Context 3 (L2): Generate Self-Edit using the L3 Strategy ===
+# The model now follows its own instructions from the previous step.
+<|===|>
+<|SYS|>You are a data generation expert. You must follow the provided strategy precisely.
+<|USER|>
+<|USER GOAL=Using the `specialization_strategy_prompt` you just created, generate the actual finetuning dataset.|>
+Your Strategy Prompt:
+<|specialization_strategy_prompt|>
+
+Original Problem:
+<|problem_description|>
+<|HOLO|>
+<|HOLO:specialization_data <>json|>
+
+# === Context 4 (L1): Evaluate the Resulting Specialist ===
+<|===|>
+<|SYS|>You are a new, specialized reasoner.
+<|USER|>
+<|USER GOAL=Solve this new, similar problem using your specialized `<think_specialist>` operator.|>
+<|new_problem_description|>
+<|HOLO|>
+<|HOLO:specialized_solution <>think_specialist|>
+
+# === Context 5 (L3): Final Reward Calculation ===
+<|===|>
+<|SYS|>You are a precise, automated meta-reward calculation system.
+<|USER|>
+**1. Assess Correctness:**
+The `correctness_score` is 1 if `specialized_solution` is correct, 0 otherwise.
+
+**2. Calculate Reward for the L3 Strategy:**
+The reward is based on the quality of the L1 operator produced by the L2 data, which was in turn produced by the L3 strategy. It's a measure of how good the initial strategy was.
+
+Token Counts:
+- baseline_reasoning_tokens: <|baseline_reasoning_tokens|>
+- specialized_reasoning_tokens: <|specialized_reasoning_tokens|>
+
+<|USER GOAL=
+You must perform these steps:
+1.  Set `correctness_score` (0 or 1).
+2.  If `correctness_score` is 0, the strategy has failed: `final_reward` = -1.0.
+3.  If `correctness_score` is 1, the `final_reward` is the token efficiency gain: (`baseline_reasoning_tokens` - `specialized_reasoning_tokens`) / `baseline_reasoning_tokens`.
+4.  This `final_reward` is assigned to the `specialization_strategy_prompt` from Context 2.
+5.  Output a single, raw JSON object with `correctness_score` and `final_reward`.
+|>
+<|HOLO|>
+<|HOLO <>json|> 

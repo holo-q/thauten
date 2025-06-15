@@ -1,0 +1,78 @@
+# ----------------------------------------------------------------------------------
+# Cognitive Operator Specialization via Self-Adaptation
+#
+# This holoware implements the SEAL (Self-Adapting Language Models) framework
+# to train a model to specialize its own cognitive operators. The model learns
+# to generate its own finetuning data to create new, more efficient skills.
+#
+# The RLHF process is as follows:
+# 1. The model solves a problem using a general `<think>` operator (Baseline).
+# 2. The model analyzes its own performance and generates a "self-edit": a
+#    synthetic dataset designed to finetune a new, specialized operator
+#    (e.g., `<think_logic_puzzle>`).
+# 3. The performance of this new specialized operator is evaluated on a new task.
+# 4. The reward is based on the correctness and the *efficiency improvement*
+#    of the specialized operator over the general one.
+# ----------------------------------------------------------------------------------
+
+# === Context 1: Baseline Performance with General Operator ===
+<|===|>
+
+<|SYS|>You are a general problem-solver. Use your standard reasoning abilities to solve the task.
+<|USER|>
+<|USER GOAL=Solve the following logic puzzle using the general `<think>` operator. Show your reasoning steps.|>
+<|problem_description|>
+<|HOLO|>
+<|HOLO:baseline_solution <>think|>
+
+# === Context 2: Generate Specialization "Self-Edit" ===
+<|===|>
+
+<|SYS|>You are a meta-cognitive architect. Your goal is to improve your own reasoning by creating specialized cognitive tools.
+<|USER|>
+Observe the logic puzzle and your general reasoning trace (`baseline_solution`).
+Problem:
+<|problem_description|>
+
+Your General Solution:
+<|baseline_solution|>
+
+<|USER GOAL=Generate a synthetic "specialization dataset" to create a new, more efficient `<think_logic_puzzle>` operator. The dataset should contain ideal, efficient reasoning traces for this type of puzzle, formatted as a list of prompt/completion pairs. This dataset is a "self-edit" for your own training.|>
+<|HOLO|>
+<|HOLO:specialization_data <>json|>
+
+# === Context 3: Evaluate Specialized Operator ===
+<|===|>
+
+<|SYS|>You are a specialized logic puzzle expert. You must use your new, highly efficient `<think_logic_puzzle>` cognitive operator.
+<|USER|>
+<|USER GOAL=Solve the following new logic puzzle using your specialized `<think_logic_puzzle>` operator.|>
+<|new_problem_description|>
+<|HOLO|>
+<|HOLO:specialized_solution <>think_logic_puzzle|>
+
+# === Context 4: Verification & Reward Calculation ===
+<|===|>
+
+<|SYS|>You are a precise, automated reward calculation system. You will evaluate the performance gain from cognitive specialization.
+<|USER|>
+**1. Assess Correctness:**
+The `correctness_score` is 1 if the `specialized_solution` correctly solves the `new_problem_description`, and 0 otherwise.
+
+**2. Calculate Reward:**
+The reward is based on the efficiency gain of the specialized operator. You will be given the token counts for the reasoning traces of both solutions.
+
+Token Counts:
+- baseline_reasoning_tokens: <|baseline_reasoning_tokens|>
+- specialized_reasoning_tokens: <|specialized_reasoning_tokens|>
+
+<|USER GOAL=
+You must perform these steps:
+1.  Set `correctness_score` (0 or 1).
+2.  If `correctness_score` is 0, `final_reward` is -1.0.
+3.  If `correctness_score` is 1, calculate the `efficiency_gain` = (`baseline_reasoning_tokens` - `specialized_reasoning_tokens`) / `baseline_reasoning_tokens`.
+4.  The `final_reward` is the `efficiency_gain`. A positive value rewards the creation of a more token-efficient operator.
+5.  Output a single, raw JSON object with `correctness_score` and `final_reward`.
+|>
+<|HOLO|>
+<|HOLO <>json|> 

@@ -1,0 +1,88 @@
+# ----------------------------------------------------------------------------------
+# Self-Forcing Compressor
+#
+# This holoware applies the "Self Forcing" principle to the compression task.
+# The model is forced to learn from its own mistakes by generating an initial
+# compression, critiquing it, and then producing a refined version.
+#
+# The RLHF process is as follows:
+# 1. The model makes an initial compression attempt (v1).
+# 2. The model audits its own v1 compression, identifies flaws, and generates
+#    a refined compression (v2).
+# 3. The final v2 compression is decompressed.
+# 4. The reward is calculated based on the correctness and, crucially, the
+#    *improvement in efficiency* from v1 to v2. This directly rewards the
+#    act of self-correction.
+# ----------------------------------------------------------------------------------
+
+# === Context 1: Initial Compression Attempt ===
+<|===|>
+
+<|SYS|>You are an information theory expert tasked with lossless text compression. Your goal is to be as dense as possible.
+<|USER|>
+<|USER GOAL=Compress the following text. This is your first attempt.|>
+<|original|>
+<|HOLO|>
+<|HOLO:compressed_v1 <>compress_v1|>
+
+# === Context 2: Self-Audit and Refinement ===
+<|===|>
+
+<|SYS|>You are a meticulous self-auditor. You will analyze your own previous compression attempt to find flaws, ambiguities, or inefficiencies. Then, you will generate a superior, more compact version that corrects these flaws.
+<|USER|>
+Observe the original text and your first compression attempt (`compressed_v1`).
+Original:
+<|original|>
+
+Your first attempt (`compressed_v1`):
+<|compressed_v1|>
+
+<|USER GOAL=First, think through the weaknesses of `compressed_v1`. What information is lost or hard to reconstruct? How could it be more efficient? Second, generate a new, improved `compressed_v2` that addresses these issues.|>
+<|HOLO|>
+<|HOLO:critique <>think|>
+<|HOLO:compressed_v2 <>compress_v2|>
+
+# === Context 3: Final Decompression ===
+<|===|>
+
+<|SYS|>You are an expert in symbolic decompression. You will be given a dense, non-human-readable compressed text. Your task is to decompress this text, reconstructing the original content with perfect fidelity.
+<|USER|>
+<|USER GOAL=Please decompress this content.|>
+<|compressed_v2|>
+<|HOLO|>
+<|HOLO:decompressed_final <>decompress_final|>
+
+# === Context 4: Verification & Reward Calculation ===
+<|===|>
+
+<|SYS|>You are a precise, automated reward calculation system. Your function is to evaluate a self-correction loop and output a structured JSON reward.
+<|USER|>
+**1. Assess Correctness:**
+Compare the original text with the final decompressed version. `correctness_score` is 1 if they are semantically equivalent, 0 otherwise.
+
+Original Text:
+<|original|>
+
+Final Decompressed Text:
+<|decompressed_final|>
+
+**2. Calculate Reward:**
+The reward is based on the *improvement* from the first to the second attempt. You will be given the token counts for each version.
+
+Token Counts:
+- original_tokens: <|original_tokens|>
+- v1_compressed_tokens: <|v1_compressed_tokens|>
+- v2_compressed_tokens: <|v2_compressed_tokens|>
+
+<|USER GOAL=
+You must perform these steps:
+1.  Set `correctness_score` (0 or 1).
+2.  If `correctness_score` is 0, `final_reward` is -1.0.
+3.  If `correctness_score` is 1:
+    a. Calculate `efficiency_v1` = `original_tokens` / `v1_compressed_tokens`.
+    b. Calculate `efficiency_v2` = `original_tokens` / `v2_compressed_tokens`.
+    c. The `final_reward` is the *gain in efficiency*: (`efficiency_v2` - `efficiency_v1`).
+4.  Output a single, raw JSON object with `correctness_score`, `efficiency_v1`, `efficiency_v2`, and `final_reward`.
+|>
+<|HOLO|>
+<|HOLO <>json|> 
