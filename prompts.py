@@ -13,10 +13,24 @@ The DSL uses a tag-based system with the `<|...|>` delimiter.
 - Role Tags: Define the speaker in a conversation.
   - `<|SYS|>`: Sets role to system.
   - `<|USER|>`: Sets role to user.
-  - `<|HOLO|>`: Sets role to assistant, and begin inference.
-  - `<|HOLO TAG=tag|>`: inference inside a <tag>...</tag> known as a cognitive fence in prompt engineering.
-  - `<|HOLO GOAL=...|>`: set a bingo reward curriculum by decomposing the hand-written high-taste goal prompt. Encourage the model to rediscover the human's highest standards through granular reconstitution. Can be combined with TAG.
-  - `<|DATA=text|>`: A placeholder for a data variable that will be injected from environment context or dataset sample and its columns
+  - `<|USER:id|>`: Sets role to user with an ID for reference.
+  - `<|USER GOAL=...|>`: Sets a bingo reward curriculum by decomposing the hand-written high-taste goal prompt.
+  - `<|HOLO|>`: Sets role to assistant.
+  - `<|HOLO:id|>`: Sets role to assistant with an ID for reference.
+  - `<|HOLO TAG=...|>`: Sets a cognitive fence tag for the assistant's response.
+  - `<|HOLO GOAL=...|>`: Sets a goal for the assistant's response.
+
+- Object Tags: Define data variables and their attributes.
+  - `<|OBJ:id|>`: A placeholder for a data variable.
+  - `<|OBJ:id <>name=val|>`: A placeholder with attributes.
+  - `<|id|>`: Shorthand for a data variable reference.
+
+- Attribute Syntax:
+  - `<>name=val`: Sets an attribute on the tag.
+  - `<>tag`: Shorthand for setting a tag attribute.
+
+- Special Tags:
+  - `---`: Clears the context to simulate multiple conversations.
 
 The parser converts a prompt file into a structured `PromptTemplate` object,
 which contains a sequence of nodes representing the parsed DSL.
@@ -25,41 +39,62 @@ which contains a sequence of nodes representing the parsed DSL.
 import logging
 import os
 import re
+import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
+
+from rich.console import Group
+from rich.rule import Rule
+from rich.text import Text
 
 logger = logging.getLogger(__name__)
 
+# TODO type alias the openai conversation dict format
+# TODO all union etc should use the type hinting syntax
 
 # --- Data Structures for Parsed Prompt Nodes ---
 
 @dataclass
-class RoleNode:
+class Node:
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+
+@dataclass
+class ContextResetNode(Node):
+    """Reset the context."""
+
+@dataclass
+class RoleNode(Node):
     """Sets the role tag by printing the special token."""
-    role: str
+    role: str = ""
 
 @dataclass
-class FixedNode:
-    """Represents a block of plain text content."""
-    text: str
-
-@dataclass
-class DataNode:
-    """Represents a data variable placeholder, e.g., <|DATA=sample|>."""
-    variable_name: str
-
-@dataclass
-class InferNode:
-    """Represents a metadata goal for the training loop, e.g., <|HOLO GOAL=...|>, <|HOLO TAG=think|>, ...."""
+class InferNode(Node):
+    """Run inference"""
     goal: str = ""
-    tag: str = ""
+    fence: str = ""
+
+    @property
+    def display_goal(self):
+        return self.goal[:30].replace(chr(10), '\\n')
 
 @dataclass
-class RolloutNode:
-    """Represents the result of a generation call during rollout."""
-    text: str
+class TextNode(Node):
+    """Represents a block of plain text content."""
+    text: str = ""
 
-PromptNode = Union[RoleNode, FixedNode, DataNode, InferNode, RolloutNode]
+    @property
+    def display_text(self):
+        return self.text[:30].replace(chr(10), '\\n')
+
+
+@dataclass
+class ObjNode(Node):
+    """Represents a data variable placeholder, e.g., <|OBJ=sample|>."""
+    var_id: str = ""
+    var_attributes: dict[str, str] = field(default_factory=dict)
+
+
+PromptNode = Union[ContextResetNode, RoleNode, TextNode, ObjNode, InferNode]
 
 @dataclass
 class PromptTemplate:
@@ -67,7 +102,77 @@ class PromptTemplate:
     Structured representation of a parsed prompt template from the DSL.
     Contains a sequence of nodes that define the entire prompt and its metadata.
     """
-    nodes: List[PromptNode] = field(default_factory=list)
+    nodes: list[PromptNode] = field(default_factory=list)
+
+    def to_rich_debug(self):
+        """Format the prompt template nodes for rich debug display."""
+        text = Text()
+        for node in self.nodes:
+            if isinstance(node, RoleNode):
+                text.append("RoleNode (", style="bold cyan")
+                text.append(f"role={node.role}", style="cyan")
+                text.append(")\n", style="cyan")
+            elif isinstance(node, InferNode):
+                text.append("InferNode (", style="bold cyan")
+                parts = []
+                if node.goal:
+                    parts.append(f"goal={node.display_goal}...")
+                if node.fence:
+                    parts.append(f"tag={node.fence}")
+                text.append(", ".join(parts), style="yellow")
+                text.append(")\n", style="cyan")
+            elif isinstance(node, TextNode):
+                text.append("TextNode", style="bold white")
+                text.append(f" (text={node.display_text}...)\n", style="white")
+            elif isinstance(node, ObjNode):
+                text.append("ObjNode", style="bold green")
+                text.append(f" (var={node.var_id}", style="green")
+                if node.var_attributes:
+                    text.append(f", attrs={node.var_attributes}", style="yellow")
+                text.append(")\n", style="green")
+            elif isinstance(node, ContextResetNode):
+                text.append("ContextResetNode\n", style="bold red")
+        return text
+
+@dataclass
+class PromptContext:
+    messages: list[Any] = field(default_factory=list)
+
+    @property
+    def text_rich(self) -> Text:
+        """Helper to format a conversation for rich display."""
+        text = Text()
+        for msg in self.messages:
+            role = msg.get("role", "none")
+            content = msg.get("content", "")
+            c = "cyan"
+            if role == "system": c = "yellow"
+            if role == "user": c = "green"
+            if role == "assistant": c = "magenta"
+            text.append(f"<|{role.upper()}|>\n", style=f"bold {c}")
+            text.append(content + "\n")
+        return text
+
+
+@dataclass
+class PromptInstance:
+    contexts: list[PromptContext] = field(default_factory=list)
+
+    def extract_fence(self, tag, role="assistant") -> Optional[str]:
+        for c in self.contexts:
+            ret = extract_fence(c.messages, tag, role)
+            if ret:
+                return ret
+        return None
+
+    def to_rich(self):
+        renderables = []
+        for i, ctx in enumerate(self.contexts):
+            if i > 0:
+                renderables.append(Rule(style="yellow"))
+            renderables.append(ctx.text_rich)
+        return Group(*renderables)
+
 
 class PromptLibrary:
     """
@@ -78,7 +183,7 @@ class PromptLibrary:
         self.prompts_dir = prompts_dir
         self._cache = {}
 
-    def load_prompt(self, filename: str) -> Union[PromptTemplate, str]:
+    def load_holoware(self, filename: str) -> PromptTemplate:
         """
         Load a prompt from file and parse it if it uses the DSL.
         """
@@ -88,18 +193,14 @@ class PromptLibrary:
         prompt_path = os.path.join(self.prompts_dir, filename)
         try:
             with open(prompt_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                text = f.read()
 
             # First, filter out comment lines
-            content = self._filter_comments(content)
+            text = self._filter_comments(text)  # TODO do this as part of _parse_prompt
+            tpl = self._parse_prompt(text)
 
-            if content.strip().startswith('<|'):
-                result = self._parse_dsl_prompt(content)
-            else:
-                result = content.strip()  # Legacy format
-
-            self._cache[filename] = result
-            return result
+            self._cache[filename] = tpl
+            return tpl
 
         except FileNotFoundError:
             logger.error(f"Prompt file not found: {prompt_path}")
@@ -107,6 +208,171 @@ class PromptLibrary:
         except Exception as e:
             logger.error(f"Error loading prompt from {prompt_path}: {e}")
             raise
+
+    def _parse_prompt(self, content: str) -> "PromptTemplate":
+        """
+        Parse a string containing the prompt DSL into a PromptTemplate object.
+        Uses manual string parsing instead of regex for better maintainability.
+        """
+        ret = PromptTemplate()
+        pos = 0
+        content_len = len(content)
+
+        def skip_whitespace() -> None:
+            nonlocal pos
+            while pos < content_len and content[pos].isspace():
+                pos += 1
+
+        def read_until_tag_end() -> str:
+            nonlocal pos
+            start = pos
+            while pos < content_len:
+                if content[pos:pos + 2] == '|>':
+                    pos += 2
+                    return content[start:pos - 2]
+                pos += 1
+            raise ValueError(f"Unclosed tag at position {start}")
+
+        def parse_attributes(tag: str) -> Tuple[Dict[str, str], Dict[str, str], str]:
+            """Parse attributes in the format <>name=val, <>tag, or space-separated name=val.
+            Returns a tuple of (node_attrs, fence_attrs, base_tag) where:
+            - node_attrs: attributes from space-separated format (e.g. "USER GOAL=text")
+            - fence_attrs: attributes from <> prefix format (e.g. "<>name=val")
+            - base_tag: the base tag without attributes
+            All attribute names are automatically lowercased.
+            """
+            node_attrs: Dict[str, str] = {}
+            fence_attrs: Dict[str, str] = {}
+
+            # First check for space-separated attributes (e.g. "USER GOAL=some text")
+            parts = tag.split(' ', 1)
+            if len(parts) > 1:
+                attr_parts = parts[1:]
+                for part in attr_parts:
+                    print(part)
+                    if "=" in part:
+                        name, val = part.split('=', 1)
+                        name = name.strip().lower()
+                        val = val.strip()
+                        if name.startswith("<>"):
+                            fence_attrs[name[2:]] = val
+                        else:
+                            node_attrs[name] = val
+                    else:
+                        if part.startswith("<>"):
+                            node_attrs['fence'] = part[2:]
+                        else:
+                            raise ValueError("Unexpected non-keyed symbol in holotag after tag name.")
+
+            return node_attrs, fence_attrs, parts[0]
+
+        def parse_tag(tag: str, out: list) -> None:
+            tag = tag.strip()
+            tag_upper = tag.upper()
+
+            node_attrs, fence_attrs, tag = parse_attributes(tag)
+            node_id = ""
+            if ':' in tag:
+                node_id = tag.split(':', 1)[1].strip()
+
+            if tag_upper == "SYS":
+                out.append(RoleNode(role='system'))
+                return
+
+            if tag_upper.startswith("USER") or tag_upper.startswith("HOLO"):
+                role = 'user' if tag_upper.startswith('USER') else 'assistant'
+
+                out.append(RoleNode(role=role, id=node_id))
+
+                if len(node_attrs) > 0:
+                    out.append(InferNode(
+                        id=node_id,
+                        goal=node_attrs.get("goal", ''),
+                        fence=node_attrs.get("fence", '')
+                    ))
+                return
+
+            if tag_upper.startswith('INFER'):
+                out.append(InferNode(
+                    id=node_id,
+                    goal=node_attrs.get('goal', ''),
+                    fence=node_attrs.get('fence', '')
+                ))
+                return
+
+            if tag_upper.startswith('OBJ:'):
+                var_name = tag[4:].strip()
+                out.append(ObjNode(var_id=var_name, var_attributes=fence_attrs))
+                return
+
+            if tag == '---':
+                out.append(ContextResetNode())
+                return
+
+            if ':' not in tag and not tag_upper.startswith(('USER', 'HOLO', 'SYS')):
+                out.append(ObjNode(var_id=tag, var_attributes=fence_attrs))
+                return
+
+            logger.warning(f"Unknown tag type: {tag}")
+
+        def read_text_content() -> str:
+            nonlocal pos
+            start = pos
+            while pos < content_len:
+                if content[pos:pos + 2] == '<|':
+                    break
+                pos += 1
+            return content[start:pos]
+
+        # Main parsing loop ----------------------------------------
+        role = None
+        out = []
+
+        while pos < content_len:
+            if pos >= content_len:
+                break
+
+            if content[pos:pos + 2] == '<|':
+                pos += 2
+                tag_content = read_until_tag_end()
+                parse_tag(tag_content, out)
+            else:
+                text = read_text_content()
+                last_is_role = isinstance(ret.nodes[-1], RoleNode)
+
+                # Skip intermediate whitespace between role & first text
+                skip = last_is_role and not text.strip()
+
+                # Skip leading whitespace same as intermediate whitespace
+                if last_is_role:
+                    text = text.lstrip()
+
+                if text and not skip:
+                    out.append(TextNode(text=text))
+
+            # Validate & commit
+            for n in out:
+                if isinstance(n, RoleNode):
+                    if role != n.role:
+                        role = n.role
+                    else:
+                        continue
+                if isinstance(n, ContextResetNode):
+                    if not role:
+                        continue  # discard redundant context reset (there can be no existing context without a role)
+                    role = None
+                if isinstance(n, TextNode) and not role:
+                    if n.text.strip():
+                        raise ValueError(f"Cannot have text node before a role. (text: {n.display_text})")
+                    continue
+                if isinstance(n, (InferNode, ObjNode)) and not role:
+                    raise ValueError("Cannot have infer or obj node before a role.")
+
+                ret.nodes.append(n)
+
+            out.clear()
+
+        return ret
 
     def _filter_comments(self, content: str) -> str:
         """
@@ -117,73 +383,86 @@ class PromptLibrary:
         filtered_lines = [line for line in lines if not line.strip().startswith('#')]
         return '\n'.join(filtered_lines)
 
-    def _parse_dsl_prompt(self, content: str) -> "PromptTemplate":
-        """
-        Parse a string containing the prompt DSL into a PromptTemplate object.
-        """
-        template = PromptTemplate()
+    def rollout(self, template: PromptTemplate, fn_inference, input_env) -> PromptInstance:
+        if not isinstance(template, PromptTemplate):
+            raise TypeError("Rollout is only supported for PromptTemplate objects.")
 
-        # Regex to find all DSL tags, keeping them as delimiters
-        tag_pattern = re.compile(
-            r'(<\|(?:SYS|USER.*?|HOLO.*?|DATA=.*?|INFER:.*?|INFER|![A-Z_]+)\|>)',
-            re.IGNORECASE | re.DOTALL
-        )
+        msg = None
+        inst = PromptInstance(contexts=[PromptContext()])
+        env = dict(input_env)
 
-        parts = tag_pattern.split(content)
+        for node in template.nodes:
+            text = ""
 
-        for part in parts:
-            if not part:
-                continue
+            if isinstance(node, RoleNode):
+                if msg:
+                    if node.role == msg['role']:
+                        continue
+                    else:
+                        inst.contexts[-1].messages.append(msg)
+                msg = {"role": node.role, "content": ""}
 
-            stripped_part = part.strip()
-            if tag_pattern.fullmatch(stripped_part):
-                # It's a DSL tag
-                tag = stripped_part[2:-2].strip()
-                t = tag.upper()
+            if isinstance(node, ContextResetNode):
+                if msg:
+                    inst.contexts[-1].messages.append(msg)
+                    msg = None
+                inst.contexts.append(PromptContext())
 
-                role_to_set = None
-                if t.startswith('USER'):
-                    role_to_set = 'user'
-                elif t.startswith('HOLO'):
-                    role_to_set = 'assistant'
+            if isinstance(node, TextNode):
+                text = node.text
 
-                if role_to_set:
-                    template.nodes.append(RoleNode(role_to_set))
+            if isinstance(node, ObjNode):
+                text += f"\n<obj id=\'{node.var_id}\'>"
+                text += env.get(node.var_id, 'NOT_FOUND')
+                text += f"</obj>"
 
-                    goal_val = ""
-                    tag_val = ""
+            if isinstance(node, InferNode):
+                # We have our context up to this point. Now, generate.
+                current_ctx = [msg.copy() for msg in inst.contexts[-1].messages]
+                if msg:
+                    current_ctx.append(msg.copy())
 
-                    goal_match = re.search(r'GOAL=', tag, re.IGNORECASE)
-                    tag_match = re.search(r'TAG=', tag, re.IGNORECASE)
+                # Substitute variables in the context needed for oeneration.
+                for msg in current_ctx:
+                    # Replace placeholders like {input} with actual data
+                    content = msg['content']
+                    for key, value in env.items():
+                        placeholder = f"{{{key}}}"
+                        if placeholder in content:
+                            content = content.replace(placeholder, str(value))
+                    text = content
 
-                    if goal_match:
-                        val = re.split(r'GOAL=', tag, maxsplit=1, flags=re.IGNORECASE)[1]
-                        if tag_match:
-                            val = re.split(r'TAG=', val, maxsplit=1, flags=re.IGNORECASE)[0]
-                        goal_val = val.strip()
+                if node.fence:
+                    text = f'<{node.fence}>'
 
-                    if tag_match:
-                        val = re.split(r'TAG=', tag, maxsplit=1, flags=re.IGNORECASE)[1]
-                        if goal_match:
-                            val = re.split(r'GOAL=', val, maxsplit=1, flags=re.IGNORECASE)[0]
-                        tag_val = val.strip()
+                # TODO this should be dry run only
+                if node.goal:
+                    output = node.goal
+                else:
+                    output = fn_inference(current_ctx)
 
-                    if goal_val or tag_val:
-                        template.nodes.append(InferNode(goal=goal_val, tag=tag_val))
+                # TODO this should be dry run only
+                if output == '<|INFER|>' and node.goal:
+                    output = f'<|INFER:{node.goal}|>'
 
-                elif t == 'SYS':
-                    template.nodes.append(RoleNode('system'))
-                elif t.startswith('DATA='):
-                    var_name = tag[len('DATA='):].strip()
-                    template.nodes.append(DataNode(variable_name=var_name))
-                elif t == 'INFER':
-                    template.nodes.append(InferNode())
+                text += output
 
-            else:
-                # It's plain text content
-                template.nodes.append(FixedNode(text=part))
+                if node.fence:
+                    text += f'</{node.fence}>'
 
-        return template
+                # Store node text to env
+                if node.id:
+                    env[node.id] = output or text
+
+            if text:
+                if not msg:
+                    raise ValueError("TODO")
+                msg['content'] += text
+
+        if msg:
+            inst.contexts[-1].messages.append(msg)
+
+        return inst
 
     def format_prompt(self, template: Union[PromptTemplate, str, List[Dict[str, str]]], **kwargs) -> Union[str, List[Dict[str, str]]]:
         """
@@ -197,7 +476,6 @@ class PromptLibrary:
                 if isinstance(node, RoleNode):
                     if msg and msg['role'] != node.role:
                         msg['content'] = msg['content'].strip()
-                        # msg["content"] += f"<|im_end|>"
                         messages.append(msg)
                     else:
                         msg = {"role": node.role, "content": ""}
@@ -208,20 +486,16 @@ class PromptLibrary:
                     raise ValueError("wtf!! set role first")
 
                 # If the assistant turn has a wrapper, add the opening tag
-                if isinstance(node, FixedNode):
+                if isinstance(node, TextNode):
                     msg["content"] += node.text
                     continue
 
-                if isinstance(node, RolloutNode):
-                    msg["content"] += node.text
-                    continue
-
-                if isinstance(node, InferNode):
+                if isinstance(node, InferNode) and (node.goal or node.fence):
                     msg["content"] += f"{{INFERENCE-RESULT}}"
                     continue
 
-                if isinstance(node, DataNode):
-                    msg["content"] += f"{{{node.variable_name}}}"
+                if isinstance(node, ObjNode):
+                    msg["content"] += f"{{{node.var_id}}}"
                     continue
 
             if msg:
@@ -243,68 +517,6 @@ class PromptLibrary:
         else:  # Legacy single-turn
             return template.format(**kwargs)
 
-    def rollout(self, template: PromptTemplate, generate_fn, data) -> list[Any]:
-        if not isinstance(template, PromptTemplate):
-            raise TypeError("Rollout is only supported for PromptTemplate objects.")
-
-        messages = []
-        current_msg = None
-
-        for node in template.nodes:
-            if isinstance(node, RoleNode):
-                if current_msg:
-                    if node.role == current_msg['role']:
-                        continue
-                    else:
-                        messages.append(current_msg)
-                current_msg = {"role": node.role, "content": f"<|im_start|>"}
-                continue
-
-            if current_msg is None:
-                raise ValueError("A role must be set before content can be added.")
-
-            if isinstance(node, FixedNode):
-                current_msg["content"] += node.text
-                continue
-
-            if isinstance(node, DataNode):
-                current_msg["content"] += f"<|DATA:{data.get(node.variable_name, 'NOT-FOUND')}|>"
-                continue
-
-            if isinstance(node, InferNode):
-                # We have our context up to this point. Now, generate.
-                context_for_generation = [msg.copy() for msg in messages]
-                if current_msg:
-                    context_for_generation.append(current_msg.copy())
-
-                # Substitute variables in the context needed for generation.
-                for msg in context_for_generation:
-                    # Replace placeholders like {input} with actual data
-                    content = msg['content']
-                    for key, value in data.items():
-                        placeholder = f"{{{key}}}"
-                        if placeholder in content:
-                            content = content.replace(placeholder, str(value))
-                    msg['content'] = content
-
-                if node.tag:
-                    current_msg["content"] += f'<{node.tag}>'
-
-                generated_text = generate_fn(context_for_generation)
-                if generated_text == "<|INFERENCE|>" and node.goal:
-                    generated_text = f"<|INFERENCE:{node.goal}|>"
-
-                current_msg["content"] += generated_text
-
-                if node.tag:
-                    current_msg["content"] += f'</{node.tag}>'
-
-
-        if current_msg:
-            messages.append(current_msg)
-
-        return messages
-
     def clear_cache(self):
         self._cache.clear()
 
@@ -314,8 +526,6 @@ class PromptLibrary:
         except OSError:
             logger.warning(f"Could not list prompts directory: {self.prompts_dir}")
             return []
-
-# --- Convenience Functions ---
 
 _default_library = None
 
@@ -328,7 +538,7 @@ def get_default_library(prompts_dir: str = "prompts") -> PromptLibrary:
 
 def load_prompt(filename: str, prompts_dir: str = "prompts") -> Union[PromptTemplate, str]:
     """Convenience function to load a prompt using the default library."""
-    return get_default_library(prompts_dir).load_prompt(filename)
+    return get_default_library(prompts_dir).load_holoware(filename)
 
 def format_prompt(template: Union[PromptTemplate, str, List[Dict[str, str]]], **kwargs) -> Union[str, List[Dict[str, str]]]:
     """Convenience function to format a prompt."""
@@ -369,6 +579,47 @@ def format_prompt(template: Union[PromptTemplate, str, List[Dict[str, str]]], **
     else:
         return str(template).format(**kwargs)
 
-def rollout_prompt(template: PromptTemplate, generate_fn, data) -> list[Any]:
+def rollout_prompt(template: PromptTemplate, generate_fn, env) -> PromptInstance:
     """Convenience function to perform a rollout on a prompt template."""
-    return get_default_library().rollout(template, generate_fn, data)
+    return get_default_library().rollout(template, generate_fn, env)
+
+def format_conversation(conversation: list[Any]):
+    text = ""
+    for msg in conversation:
+        text += msg['content']
+    return text
+
+def extract_fence(messages: List[Dict[str, Any]], wrapper_tag: Optional[str], role='assistant') -> Optional[str]:
+    """Extract content from a dynamic wrapper tag, e.g., <compress>...</compress>"""
+    if not wrapper_tag:
+        return messages.strip() if isinstance(messages, str) else messages[-1]["content"].strip()
+
+    tag = wrapper_tag.lower()
+
+    for msg in reversed(messages):
+        if role is not None and msg["role"] != role:
+            continue
+        content = msg["content"]
+        matches = list(re.finditer(fr'<{tag}>\s*(.*?)\s*(?:</{tag}>|$)', content, re.DOTALL))
+        if matches:
+            return matches[-1].group(1).strip()
+
+    return None
+
+def extract_json(conversation: str) -> Optional[str]:
+    # TODO take str|list[Any]
+    # Extract JSON from anywhere in the response
+    # Look for ```json blocks first
+    block_match = re.search(r'```json\s*(.*?)\s*```', conversation, re.DOTALL)
+    if block_match:
+        ret = block_match.group(1).strip()
+    else:
+        # Look for standalone JSON object
+        match = re.search(r'\{[^{}]*(?:\{[^{}]*}[^{}]*)*}', conversation, re.DOTALL)
+        if match:
+            ret = match.group(0)
+        else:
+            logger.warning("No JSON found in evaluation")
+            return None
+
+    return ret

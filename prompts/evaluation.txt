@@ -1,5 +1,3 @@
-# Multi-turn conversation format using standard special tokens
-
 <|SYS|>You are a precise content evaluator. Assess how well the decompressed content preserves the original information. Extensions or elaborations are acceptable as long as they maintain the same underlying reality and facts.
 <|USER|>
 <|HOLO GOAL=Compare the original input with the decompressed output, identify any issues, and output your assessment in the specified JSON format.|>
@@ -11,10 +9,9 @@ Analyze the preservation of information. Focus on identifying actual losses or d
 ```json
 {
   "deviations": ["list of factual changes or alterations"],
-  "inaccuracies": ["list of incorrect information introduced"], 
+  "inaccuracies": ["list of incorrect information introduced"],
   "missing_statements": ["list of important information lost"],
   "acceptable_extensions": ["list of valid elaborations"],
-  "total_issues": 0,
   "severity": "MINOR|MODERATE|MAJOR",
   "quality": "EXCELLENT|GOOD|FAIR|POOR"
 }
@@ -23,5 +20,5 @@ Analyze the preservation of information. Focus on identifying actual losses or d
 # We will force the model to think
 # Then force it to output a json object and nothing else
 <|HOLO|>
-<|HOLO TAG=think|> 
+<|HOLO TAG=think|>
 <|HOLO TAG=json|>

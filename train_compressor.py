@@ -61,12 +61,12 @@ All prompts support two formats:
 The system auto-detects format based on "# Multi-turn conversation format" header.
 """
 
+import json
 import logging
 import os
-import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-import torch
+import numpy as np
 import verifiers as vf
 from datasets import Dataset, load_dataset
 from datasets.arrow_dataset import Dataset as ArrowDataset
@@ -74,16 +74,16 @@ from datasets.iterable_dataset import IterableDataset
 from openai import OpenAI
 from rich import box
 # Rich imports for beautiful output
-from rich.console import Console, Group
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
-from rich.text import Text
 from verifiers.envs import Environment
 from verifiers.rubrics import Rubric
 
-from prompts import PromptLibrary
+import prompts
+from prompts import format_conversation, PromptInstance, PromptLibrary, rollout_prompt
 
 # Create rich console
 console = Console()
@@ -120,7 +120,7 @@ class CompressorEnv(Environment):
         self,
         dataset: Dataset,
         eval_dataset: Optional[Dataset] = None,
-        evaluator_model: str = "Qwen/Qwen2.5-7B-Instruct",
+        eval_model: str = "Qwen/Qwen2.5-7B-Instruct",
         alpha: float = 0.01,
         beta: float = 1.0,
         base_score: float = 10.0,
@@ -129,325 +129,40 @@ class CompressorEnv(Environment):
         **kwargs
     ):
         self.dry_run = dry_run
-
-        # In a dry run, we don't initialize the evaluator client to avoid network calls.
         if not self.dry_run:
             from openai import OpenAI
             self.evaluator_client = OpenAI(
                 base_url="http://localhost:8000/v1",
                 api_key="none"
             )
-            self.evaluator_model = evaluator_model
+            self.evaluator_model = eval_model
         else:
             self.evaluator_client = None
             self.evaluator_model = None
 
-        # Compression parameters
         self.alpha = alpha
         self.beta = beta
         self.base_score = base_score
-
-        # Initialize prompt library
         self.prompt_lib = PromptLibrary()
 
-        # Load prompts for the single compression stage
-        self.compression_prompt = self.prompt_lib.load_prompt("compression.txt")
-        self.decompression_prompt = self.prompt_lib.load_prompt("decompression.txt")
-        self.evaluation_prompt = self.prompt_lib.load_prompt("evaluation.txt")
+        self.holoware = self.prompt_lib.load_holoware("compressor.txt")
 
-        # Custom rubric for compression rewards
-        rubric = Rubric(funcs=[self._compression_reward_func], weights=[1.0])
+        if dry_run:
+            console.print(self.holoware.to_rich_debug())
 
-        # Initialize parent Environment
+        def reward(prompt, completion, answer, state, **kwargs) -> float:
+            return state.get("reward", 0.0)
+
+        rubric = Rubric(funcs=[reward], weights=[1.0])
         super().__init__(
             dataset=dataset,
             eval_dataset=eval_dataset,
-            system_prompt=self._get_system_prompt(),
+            system_prompt="You are in a symbolic compression training environment.",
             rubric=rubric,
             max_concurrent=max_concurrent,
             message_type='chat',
             **kwargs
         )
-
-    def get_model_response(self, prompt, client, model, sampling_args, message_type):
-        """
-        Override the base method to intercept calls during a dry run.
-        """
-        if self.dry_run:
-            # In a dry run, we simulate the model's response.
-            # The actual context logging is handled in `log_compression_sample`.
-            # We need to provide dummy responses that can be parsed by the extraction logic.
-            prompt_str = " ".join([msg.get('content', '') for msg in prompt])
-            if "compress" in prompt_str.lower() and "decompress" not in prompt_str.lower():
-                 return "<compress>dry-run compressed content</compress>"
-            elif "decompress" in prompt_str.lower():
-                 return "<decompress>dry-run decompressed content</decompress>"
-            else: # Evaluation
-                 return '```json\n{"total_issues": 0, "severity": "MINOR", "quality": "EXCELLENT"}\n```\nFidelity Score: 1.0'
-
-        # During a real run, this calls the underlying `verifiers` library function
-        return super().get_model_response(prompt, client, model, sampling_args, message_type)
-
-    def _get_system_prompt(self) -> str:
-        # System prompt is now defined in the prompt files, so this is just a fallback.
-        return "You are in a symbolic compression training environment."
-
-    def _extract_fence(self, completion: Union[str, List[Dict[str, Any]]], wrapper_tag: Optional[str]) -> str:
-        """Extract content from a dynamic wrapper tag, e.g., <compress>...</compress>"""
-        if not wrapper_tag:
-            return completion.strip() if isinstance(completion, str) else completion[-1]["content"].strip()
-
-        # Handle both string and conversation format
-        content = completion
-        if isinstance(completion, list):
-            # Get the last assistant message
-            for msg in reversed(completion):
-                if msg["role"] == "assistant":
-                    content = msg["content"]
-                    break
-            if not isinstance(content, str):
-                return ""
-
-        # Regex to find <tag>content</tag> or <tag>content
-        tag = wrapper_tag.lower()
-        # Find all matches and take the last one
-
-        text_content = ""
-        if isinstance(content, str):
-            text_content = content
-        elif isinstance(content, list):
-            for msg in reversed(content):
-                if msg["role"] == "assistant":
-                    text_content = msg["content"]
-                    break
-
-        if not text_content:
-            return ""
-
-        matches = list(re.finditer(fr'<{tag}>\s*(.*?)\s*(?:</{tag}>|$)', text_content, re.DOTALL))
-        if matches:
-            return matches[-1].group(1).strip()
-        return text_content.strip()
-
-    def _extract_fidelity_score(self, evaluation: str) -> float:
-        """Extract fidelity score from evaluation"""
-        match = re.search(r'Fidelity Score:\s*([0-9]*\.?[0-9]+)', evaluation)
-        if match:
-            try:
-                return float(match.group(1))
-            except ValueError:
-                pass
-        return 0.5  # default fallback score
-
-    def _parse_structured_evaluation(self, evaluation: str) -> Dict[str, Any]:
-        """Parse JSON evaluation format from model output"""
-        result = {
-            'deviations':            [],
-            'inaccuracies':          [],
-            'missing_statements':    [],
-            'acceptable_extensions': [],
-            'total_issues':          0,
-            'severity':              'MINOR',
-            'quality':               'GOOD',
-            'raw_evaluation':        evaluation
-        }
-
-        try:
-            # Extract JSON from anywhere in the response
-            # Look for ```json blocks first
-            json_block_match = re.search(r'```json\s*(.*?)\s*```', evaluation, re.DOTALL)
-            if json_block_match:
-                json_str = json_block_match.group(1).strip()
-            else:
-                # Look for standalone JSON object
-                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', evaluation, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(0)
-                else:
-                    logger.warning("No JSON found in evaluation")
-                    return result
-
-            # Parse the JSON
-            import json
-            eval_data = json.loads(json_str)
-
-            # Update result with parsed data
-            result.update({
-                'deviations':            eval_data.get('deviations', []),
-                'inaccuracies':          eval_data.get('inaccuracies', []),
-                'missing_statements':    eval_data.get('missing_statements', []),
-                'acceptable_extensions': eval_data.get('acceptable_extensions', []),
-                'total_issues':          eval_data.get('total_issues', 0),
-                'severity':              eval_data.get('severity', 'MINOR'),
-                'quality':               eval_data.get('quality', 'GOOD'),
-                'raw_evaluation':        evaluation
-            })
-
-            # Auto-calculate total_issues if not provided or seems wrong
-            calculated_issues = len(result['deviations']) + len(result['inaccuracies']) + len(result['missing_statements'])
-            if result['total_issues'] == 0 and calculated_issues > 0:
-                result['total_issues'] = calculated_issues
-
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning(f"Failed to parse structured evaluation: {e}")
-
-        return result
-
-    def _calculate_fidelity_from_structured_eval(self, eval_result: Dict[str, Any]) -> float:
-        """Calculate fidelity score from structured evaluation"""
-        total_issues = eval_result['total_issues']
-        severity = eval_result['severity']
-        quality = eval_result['quality']
-
-        # Start with perfect score
-        fidelity = 1.0
-
-        # Penalize based on number of issues
-        if total_issues > 0:
-            # Base penalty per issue
-            base_penalty = 0.1
-
-            # Adjust penalty based on severity
-            severity_multiplier = {
-                'MINOR':    0.5,
-                'MODERATE': 1.0,
-                'MAJOR':    2.0
-            }.get(severity, 1.0)
-
-            # Calculate penalty
-            penalty = min(total_issues * base_penalty * severity_multiplier, 0.9)  # Cap at 0.9 to keep minimum 0.1
-            fidelity -= penalty
-
-        # Additional adjustment based on overall quality assessment
-        quality_adjustments = {
-            'EXCELLENT': 0.0,  # No adjustment
-            'GOOD':      -0.05,  # Small penalty
-            'FAIR':      -0.15,  # Moderate penalty
-            'POOR':      -0.3  # Large penalty
-        }
-        fidelity += quality_adjustments.get(quality, 0.0)
-
-        # Ensure fidelity stays within bounds
-        return max(0.0, min(1.0, fidelity))
-
-    def _count_tokens(self, text: str) -> int:
-        """Counts tokens by splitting on whitespace."""
-        return len(text.split())
-
-    def _format_conversation_text(self, context: List[Dict[str, str]]) -> Text:
-        """Helper to format a conversation for rich display."""
-        text = Text()
-        for msg in context:
-            role = msg.get("role", "none")
-            content = msg.get("content", "")
-            color = "cyan"
-            if role == "system": color = "yellow"
-            elif role == "user": color = "green"
-            elif role == "assistant": color = "magenta"
-            text.append(f"<|{role.upper()}|>\n", style=f"bold {color}")
-            text.append(content + "\n\n")
-        return text
-
-    def _evaluate_compression(self, original: str, compressed: str, decompressed: str) -> Tuple[float, str]:
-        """
-        Evaluate compression fidelity by comparing original and decompressed content using a rollout.
-        """
-        from prompts import rollout_prompt
-
-        if self.dry_run:
-            return 1.0, "Dry run evaluation"
-
-        # Define the generation function for the evaluator
-        def get_evaluation(messages):
-            return self.get_model_response(
-                prompt=messages,
-                client=self.evaluator_client,
-                model=self.evaluator_model,
-                sampling_args={'temperature': 0.0},
-                message_type='chat'
-            )
-
-        # Perform the evaluation rollout
-        if isinstance(self.evaluation_prompt, str):
-             # This should not happen with the new prompt system, but as a fallback:
-            evaluation_messages = [{"role": "user", "content": self.evaluation_prompt.format(original=original, decompressed=decompressed)}]
-            evaluation_messages.append({"role": "assistant", "content": get_evaluation(evaluation_messages)})
-        else:
-            evaluation_messages = rollout_prompt(
-                self.evaluation_prompt,
-                get_evaluation,
-                data={"original": original, "decompressed": decompressed}
-            )
-
-        # The evaluation result is in the content of the last message
-        evaluation_text = ""
-        if evaluation_messages and isinstance(evaluation_messages, list):
-            # The full content is in the last message of the list
-            evaluation_text = evaluation_messages[-1].get('content', '')
-
-        # Extract fidelity score from the final generated text
-        structured_eval = self._parse_structured_evaluation(evaluation_text)
-        fidelity_score = self._calculate_fidelity_from_structured_eval(structured_eval)
-
-        return fidelity_score, evaluation_text
-
-    def _calculate_reward(self, compressed: str, fidelity_score: float) -> float:
-        """Calculate reward based on compression and fidelity"""
-        token_count = self._count_tokens(compressed)
-        penalty = self.alpha * token_count + self.beta * (1 - fidelity_score)
-        reward = self.base_score - penalty
-
-        # Rich debug logging
-        if torch.rand(1).item() < 0.05:  # 5% chance for detailed logging
-            debug_text = Text()
-            debug_text.append("🔍 Reward Analysis\n", style="bold yellow")
-            debug_text.append(f"Tokens: {token_count} | ", style="cyan")
-            debug_text.append(f"Fidelity: {fidelity_score:.3f} | ", style="green" if fidelity_score > 0.7 else "yellow")
-            debug_text.append(f"Final: {reward:.2f}", style="bold white")
-            console.print(debug_text)
-
-        return max(0.0, reward)
-
-    def log_compression_sample(self, original: str, compressed: str, decompressed: str, fidelity_score: float, reward: float, evaluation: str = "", cmp_ctx: Optional[List[Dict[str, Any]]] = None, dcmp_ctx: Optional[List[Dict[str, Any]]] = None) -> None:
-        if self.dry_run:
-            renderables = []
-            if cmp_ctx:
-                renderables.append(self._format_conversation_text(cmp_ctx))
-            if dcmp_ctx:
-                if cmp_ctx:
-                    renderables.append(Rule(style="yellow"))
-                renderables.append(self._format_conversation_text(dcmp_ctx))
-
-            console.print(Panel(
-                Group(*renderables),
-                title="[bold yellow]Dry Run: Full Conversation Flow[/]",
-                border_style="yellow",
-                box=box.ROUNDED,
-                title_align="left"
-            ))
-            return
-
-        # Create a table for beautiful logging
-        table = Table(box=box.MINIMAL, show_header=False, expand=True)
-        table.add_column(style="bold magenta")
-        table.add_column(style="white")
-
-        table.add_row("Original:", original[:200] + "..." if len(original) > 200 else original)
-        table.add_row("Compressed:", compressed)
-        table.add_row("Decompressed:", decompressed[:200] + "..." if len(decompressed) > 200 else decompressed)
-        table.add_row("Fidelity:", f"{fidelity_score:.2f}")
-        table.add_row("Reward:", f"{reward:.2f}")
-        # table.add_row("Evaluation:", evaluation)
-
-        grid = Table.grid(expand=True)
-        grid.add_column()
-        grid.add_row(Panel(
-            table,
-            title=f"[bold green]Compression Sample[/]",
-            border_style="green",
-            title_align="left"
-        ))
-        console.print(grid)
 
     def rollout(self, client: OpenAI, model: str, prompt: str | List[Dict[str, Any]], answer: str, sampling_args=None, **kwargs: Any) -> Tuple[Union[str, List[Dict[str, Any]]], Dict[str, Any]]:
         if sampling_args is None:
@@ -455,19 +170,20 @@ class CompressorEnv(Environment):
         raise NotImplementedError("This environment uses a custom generate loop, not the standard rollout method.")
 
     def generate(self,
-                 inputs: Dataset,
-                 client,
-                 model: str,
-                 sampling_args=None,
+                 dataset: Dict[str, List[Any]] | Dataset,
+                 client: OpenAI | None = None,
+                 model: str | None = None,
+                 sampling_args: Dict[str, Any] = {},
+                 max_concurrent: int | None = None,
+                 score_rollouts: bool = True,
                  **kwargs: Any) -> Dict[str, List[Any]]:
         """
         Overrides the base generate method to perform a full compression/decompression cycle.
         """
         if sampling_args is None:
             sampling_args = {}
-        from prompts import rollout_prompt, format_prompt
 
-        results = {
+        res = {
             "original":     [],
             "compressed":   [],
             "decompressed": [],
@@ -482,83 +198,179 @@ class CompressorEnv(Environment):
 
         # The 'generate' function for the rollout
         def get_generation(messages):
-            return self.get_model_response(
-                prompt=messages,
-                client=client,
-                model=model,
-                sampling_args=sampling_args,
-                message_type='chat'
-            )
+            return self.get_model_response(prompt=messages, client=client, model=model, sampling_args=sampling_args, message_type='chat')
 
-        for sample in inputs:
-            original_content = sample['text'] # type: ignore
+        def get_evaluation(messages):
+            return self.get_model_response(prompt=messages, client=client, model=model, sampling_args=sampling_args, message_type='chat')
 
-            if isinstance(self.compression_prompt, str):
-                raise TypeError("Compression prompt must be a PromptTemplate for rollouts.")
-            cmp_ctx = rollout_prompt(self.compression_prompt, get_generation, data={"input": original_content})
-            cmp_tag = self._extract_fence(cmp_ctx, "compress")
+        def _calculate_fidelity(eval_result: Dict[str, Any]) -> float:
+            """Calculate fidelity score from structured evaluation"""
+            total_issues = eval_result['total_issues']
+            severity = eval_result['severity']
+            quality = eval_result['quality']
 
-            if isinstance(self.decompression_prompt, str):
-                raise TypeError("Decompression prompt must be a PromptTemplate for rollouts.")
-            dcmp_ctx = rollout_prompt(self.decompression_prompt, get_generation, data={"input": cmp_tag})
-            dcmp_tag = self._extract_fence(dcmp_ctx, "decompress")
+            ret = 1.0
 
-            fidelity_score, evaluation_text = self._evaluate_compression(
-                original=original_content,
-                compressed=cmp_tag,
-                decompressed=dcmp_tag
-            )
+            if total_issues > 0:
+                base_penalty = 0.1
+                severity_multiplier = {
+                    'MINOR':    0.5,
+                    'MODERATE': 1.0,
+                    'MAJOR':    2.0
+                }.get(severity, 1.0)
+                penalty = min(total_issues * base_penalty * severity_multiplier, 0.9)  # Cap at 0.9 to keep minimum 0.1
+                ret -= penalty
 
-            reward = self._calculate_reward(cmp_tag, fidelity_score)
+            quality_adjustments = {
+                'EXCELLENT': 0.0,  # No adjustment
+                'GOOD':      -0.05,  # Small penalty
+                'FAIR':      -0.15,  # Moderate penalty
+                'POOR':      -0.3  # Large penalty
+            }
+            ret += quality_adjustments.get(quality, 0.0)
 
-            self.log_compression_sample(
-                original=original_content,
-                compressed=cmp_tag,
-                decompressed=dcmp_tag,
-                fidelity_score=fidelity_score,
-                reward=reward,
-                evaluation=evaluation_text,
-                cmp_ctx=cmp_ctx,
-                dcmp_ctx=dcmp_ctx
-            )
+            return np.clip(ret, 0.0, 1.0)
+
+
+        for sample in dataset:
+            original = sample.get('text', '')  # Use get() to handle missing keys safely
+
+            unrolled = rollout_prompt(self.holoware, get_generation, env={
+                "input":    original,
+                "original": original,
+            })
+            compressed = unrolled.extract_fence("compress")
+            decompressed = unrolled.extract_fence("decompress")
+            verification = self._parse_structured_verification(unrolled.contexts[-1].messages)
+            fidelity = 1.0
+            if verification:
+                fidelity = _calculate_fidelity(verification)
+
+            if self.dry_run:
+                console.print(Panel(
+                    unrolled.to_rich(),
+                    title="[bold yellow]Dry Run: Full Conversation Flow[/]",
+                    border_style="yellow",
+                    box=box.ROUNDED,
+                    title_align="left"
+                ))
+
+            token_count = len(compressed.split())  # count tokens by splitting on whitespace
+            penalty = self.alpha * token_count + self.beta * (1 - fidelity)
+            reward = self.base_score - penalty
+            reward = max(0.0, reward)
 
             # Store results
-            results["original"].append(original_content)
-            results["compressed"].append(cmp_tag)
-            results["decompressed"].append(dcmp_tag)
-            results["evaluation"].append(evaluation_text)
-            results["fidelity"].append(fidelity_score)
-            results["reward"].append(reward)
+            res["original"].append(original)
+            res["compressed"].append(compressed)
+            res["decompressed"].append(decompressed)
+            res["fidelity"].append(fidelity)
+            res["reward"].append(reward)
+            res["answer"].append(original)
+            res["state"].append({"reward": reward})
 
-            initial_prompt_template = self.prompt_lib.load_prompt("compression.txt")
-            initial_prompt_messages = format_prompt(initial_prompt_template, content=original_content)
-            if not isinstance(initial_prompt_messages, list):
-                initial_prompt_messages = [{"role": "user", "content": initial_prompt_messages}]
+        return res
 
-            results["prompt"].append(initial_prompt_messages)
 
-            completion_conversation = []
-            if isinstance(cmp_ctx, list):
-                completion_conversation.extend(cmp_ctx)
-
-            if isinstance(dcmp_ctx, list):
-                if len(dcmp_ctx) > 1:
-                    completion_conversation.extend(dcmp_ctx[1:])
-                elif len(dcmp_ctx) == 1:
-                     completion_conversation.extend(dcmp_ctx)
-
-            results["completion"].append(completion_conversation)
-            results["answer"].append(original_content)
-            results["state"].append({"reward": reward})
-
-        return results
-
-    def _compression_reward_func(self, prompt, completion, answer, state, **kwargs) -> float:
+    def get_model_response(self,
+                           prompt: str | List[Dict[str, str]],
+                           client: OpenAI,
+                           model: str,
+                           sampling_args: Dict[str, Any] = {},
+                           message_type: Literal['chat', 'completion'] | None = None,
+                           sanitize_sampling_args: bool = True,
+                           **kwargs: Any):
         """
-        This is a placeholder, as the reward is calculated in the main rollout loop.
-        The rubric requires at least one function.
+        Override the base method to intercept calls during a dry run.
         """
-        return state.get("reward", 0.0)
+        if self.dry_run:
+            prompt_str = " ".join([msg.get('content', '') for msg in prompt])
+            if "compress" in prompt_str.lower() and "decompress" not in prompt_str.lower():
+                return "compressed-symbols"
+            elif "decompress" in prompt_str.lower():
+                return "decompressed-text"
+            else:  # Evaluation
+                return '```json\n{"total_issues": 0, "severity": "MINOR", "quality": "EXCELLENT"}\n```\nFidelity Score: 1.0'
+
+        return super().get_model_response(prompt, client, model, sampling_args, message_type)
+
+
+    def _parse_structured_verification(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Parse JSON evaluation format from model output"""
+        result = {
+            'deviations':            [],
+            'inaccuracies':          [],
+            'missing_statements':    [],
+            'acceptable_extensions': [],
+            'total_issues':          0,
+            'severity':              'MINOR',
+            'quality':               'GOOD',
+            'raw_evaluation':        messages
+        }
+
+        # Convert conversation to string if it's a list
+        if isinstance(messages, list):
+            messages = format_conversation(messages)
+
+        jsons = prompts.extract_json(messages)
+        if not jsons:
+            return result
+
+        try:
+            scores = json.loads(jsons)
+            result.update({
+                'deviations':            scores.get('deviations', []),
+                'inaccuracies':          scores.get('inaccuracies', []),
+                'missing_statements':    scores.get('missing_statements', []),
+                'acceptable_extensions': scores.get('acceptable_extensions', []),
+                'severity':              scores.get('severity', 'MINOR'),
+                'quality':               scores.get('quality', 'GOOD'),
+            })
+            # Calculate total issues
+            result['total_issues'] = (
+                len(result['deviations']) +
+                len(result['inaccuracies']) +
+                len(result['missing_statements'])
+            )
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning(f"Failed to parse structured evaluation: {e}")
+
+        return result
+
+
+    def log(self,
+            conversation: PromptInstance,
+            fidelity_score: float,
+            reward: float) -> None:
+        if self.dry_run:
+            console.print(Panel(
+                conversation.to_rich(),
+                title="[bold yellow]Dry Run: Full Conversation Flow[/]",
+                border_style="yellow",
+                box=box.ROUNDED,
+                title_align="left"
+            ))
+            return
+
+        # Create a table for beautiful logging
+        table = Table(box=box.MINIMAL, show_header=False, expand=True)
+        table.add_column(style="bold magenta")
+        table.add_column(style="white")
+
+        table.add_row("Fidelity:", f"{fidelity_score:.2f}")
+        table.add_row("Reward:", f"{reward:.2f}")
+        # table.add_row("Evaluation:", evaluation)
+
+        grid = Table.grid(expand=True)
+        grid.add_column()
+        grid.add_row(Panel(
+            table,
+            title=f"[bold green]Compression Sample[/]",
+            border_style="green",
+            title_align="left"
+        ))
+        console.print(grid)
+
 
     def format_dataset(self,
                        dataset: Dataset,
@@ -641,7 +453,7 @@ def execute_dry_run():
     # The client and model are mocked as they won't be used by the overridden method.
     console.print(f"Generating {len(selected_samples)} sample contexts without running any models...")
     dry_run_env.generate(
-        inputs=selected_samples, # Use the smaller, converted dataset
+        dataset=selected_samples,  # Use the smaller, converted dataset
         client=None,
         model="dry-run-model",
         sampling_args={}
