@@ -1,0 +1,101 @@
+# ----------------------------------------------------------------------------------
+# Emergent Language Bootstrapping
+#
+# This holoware trains a model to invent domain-specific, disposable
+# micro-languages on the fly to solve problems more efficiently.
+# It formalizes the process of developing a good notation, making it a
+# learnable skill.
+#
+# The RLHF process is as follows:
+# 1. A baseline solution is generated in English.
+# 2. The model invents a language for the same problem.
+# 3. The model solves the problem using its new language.
+# 4. The model translates the solution back to English.
+# 5. An evaluator model assesses the correctness and calculates a reward
+#    based on the token efficiency vs the baseline.
+#
+# Rewards are based on the total efficiency of the entire process compared
+# to solving the problem directly. A reward > 1.0 means the abstraction was successful.
+# ----------------------------------------------------------------------------------
+
+# === Context 1: Baseline Solution ===
+<|===|>
+
+<|SYS|>You are a straightforward, expert problem-solver. Your task is to solve the given problem directly and clearly in natural language.
+<|USER|>
+<|USER GOAL=Solve the following problem directly in English. Your solution will be used as a baseline for correctness and efficiency.|>
+<|problem_description|>
+<|HOLO|>
+<|HOLO:baseline_solution <>baseline|>
+
+
+# === Context 2: Language Invention ===
+<|===|>
+
+<|SYS|>You are an expert in formal linguistics, problem decomposition, and symbolic logic. Your task is to invent a hyper-concise, domain-specific, symbolic micro-language to solve a given problem. The language should be optimized for expressing the problem's core logic and components with maximum token efficiency.
+<|USER|>
+<|USER GOAL=Invent a language perfectly tailored to solve the following problem. The language's grammar and symbols should directly map to the problem's objects and actions. Provide a specification for this language.|>
+<|problem_description|>
+<|HOLO|>
+<|HOLO:language_spec <>language|>
+
+# === Context 3: Solve in Invented Language ===
+<|===|>
+
+<|SYS|>You are an expert problem-solver. You will be given a problem and a custom-designed micro-language specification. Your task is to solve the problem using ONLY the provided language, producing the most efficient and direct solution possible within that language's rules.
+<|USER|>
+<|USER GOAL=Solve the problem using the provided language. The solution must be purely symbolic, adhering strictly to the language's grammar.|>
+Problem:
+<|problem_description|>
+
+Language Specification:
+<|language_spec|>
+<|HOLO|>
+<|HOLO:solution_encoded <>solution|>
+
+# === Context 4: Translate Solution to English ===
+<|===|>
+
+<|SYS|>You are an expert translator specializing in esoteric and purpose-built languages. You will be given a solution encoded in a symbolic micro-language and its specification. Your task is to decompress this symbolic representation back into a clear, comprehensive, natural English explanation.
+<|USER|>
+<|USER GOAL=Translate the encoded solution back into a clear, natural English description of the answer.|>
+Language Specification:
+<|language_spec|>
+
+Encoded Solution:
+<|solution_encoded|>
+<|HOLO|>
+<|HOLO:solution_decoded <>english_solution|>
+
+# === Context 5: Verification & Reward Calculation ===
+<|===|>
+
+<|SYS|>You are a precise, automated reward calculation system. Your function is to compare a baseline solution with a solution generated via a language invention process, and output a structured JSON containing correctness and efficiency metrics. Adhere strictly to the output format without commentary.
+<|USER|>
+**1. Assess Correctness:**
+Compare the two solutions below. The `correctness_score` is 1 if `solution_decoded` is semantically equivalent to `baseline_solution` and fully solves the original problem. Any loss of information, hallucination, or failure to solve the problem results in a score of 0.
+
+Baseline Solution (`baseline_solution`):
+<|baseline_solution|>
+
+Decoded Solution (`solution_decoded`):
+<|solution_decoded|>
+
+**2. Calculate Reward:**
+Using the correctness score and the provided token counts, calculate the final reward. The training script will provide these counts.
+
+Token Counts:
+- baseline_tokens: <|baseline_tokens|>
+- invention_tokens: <|invention_tokens|>
+- encoded_solution_tokens: <|encoded_solution_tokens|>
+- decoded_solution_tokens: <|decoded_solution_tokens|>
+
+<|USER GOAL=
+You must perform these steps:
+1.  Set `correctness_score` to 1 or 0 based on your assessment.
+2.  If `correctness_score` is 0, set `final_reward` to -1.0 and `efficiency_ratio` to 0.0.
+3.  If `correctness_score` is 1, calculate `efficiency_ratio` = `baseline_tokens` / (`invention_tokens` + `encoded_solution_tokens` + `decoded_solution_tokens`). The `final_reward` is equal to the `efficiency_ratio`.
+4.  Output a single, raw JSON object with no surrounding text. The JSON must contain: `correctness_score` (int), `efficiency_ratio` (float), `final_reward` (float).
+|>
+<|HOLO|>
+<|HOLO <>json|> 
