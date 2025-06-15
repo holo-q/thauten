@@ -1,5 +1,4 @@
-"""
-Symbolic Compression Training Loop
+""" Symbolic Compression Training Loop
 
 This script implements a multi-stage GRPO training pipeline for symbolic compression and decompression
 using the verifiers framework. Each training stage uses specific prompt templates with variable tags.
@@ -76,7 +75,7 @@ from rich.rule import Rule
 from rich.table import Table
 
 from holoware_env import HolowareEnv, logger, VerificationModel
-from log import console
+from log import cl as c
 
 # Create rich console
 
@@ -152,37 +151,38 @@ def execute_dry_run():
     """
     Handles the dry run logic entirely, without instantiating the trainer.
     """
-    console.print(Rule("[bold yellow]DRY RUN MODE[/]"))
+    c.print(Rule("[bold yellow]DRY RUN MODE[/]"))
 
     # --- 1. Load Dataset ---
     try:
         dataset = load_dataset('agentlans/wikipedia-paragraphs', split='train', streaming=True)
         if not isinstance(dataset, IterableDataset):
-            console.print(f"[red]❌ Expected an IterableDataset for streaming, but got {type(dataset)}.[/red]")
+            c.print(f"[red]❌ Expected an IterableDataset for streaming, but got {type(dataset)}.[/red]")
             return
     except Exception as e:
-        console.print(f"[red]❌ Failed to load dataset for dry run: {e}[/red]")
+        c.print(f"[red]❌ Failed to load dataset for dry run: {e}[/red]")
         return
 
     # --- 2. Prepare a few samples ---
     sample_size = 10
     try:
-        samples = list(dataset.take(sample_size))
-        if len(samples) < sample_size:
-            console.print(f"[yellow]Warning: Could only fetch {len(samples)} samples for the dry run.[/yellow]")
-        if not samples:
-            console.print("[red]Not enough data in the training set to perform a dry run.[/red]")
+        dataset_sel = list(dataset.take(sample_size))
+        if len(dataset_sel) < sample_size:
+            c.print(f"[yellow]Warning: Could only fetch {len(dataset_sel)} samples for the dry run.[/yellow]")
+        if not dataset_sel:
+            c.print("[red]Not enough data in the training set to perform a dry run.[/red]")
             return
-        selected_samples = ArrowDataset.from_list(samples)
+        dataset_sel = ArrowDataset.from_list(dataset_sel)
 
     except Exception as e:
-        console.print(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
+        c.print(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
         return
 
     # --- 3. Create a Dry-Run-Specific Environment ---
-    dry_run_env = HolowareEnv(
-        path="compressor.hol",
-        dataset=selected_samples,
+    env = HolowareEnv(
+        'compressor.hol',
+        dataset_sel,
+        'text',
         score_class=FidelityEvaluation,
         eval_dataset=None,
         alpha=0.05,
@@ -191,14 +191,14 @@ def execute_dry_run():
     )
 
     # --- 4. Manually trigger rollouts ---
-    console.print(f"Generating {len(selected_samples)} sample contexts without running any models...")
-    dry_run_env.generate(
-        dataset=selected_samples,
+    c.print(f"Generating {len(dataset_sel)} sample contexts without running any models...")
+    env.generate(
+        dataset=dataset_sel,
         client=None,
         model="dry-run-model",
         sampling_args={}
     )
-    console.print(Rule("[yellow]DRY RUN COMPLETE[/]"))
+    c.print(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
 def train_compressor(model_path: str, base_model_name: str):
     """Train the compressor model in a single stage."""
@@ -210,28 +210,27 @@ def train_compressor(model_path: str, base_model_name: str):
     num_iterations = 4
 
     # Step 1: Model Loading
-    console.print(f"[cyan]📦 Loading model: {model_path}[/]")
+    c.print(f"[cyan]📦 Loading model: {model_path}[/]")
 
     model, tokenizer = vf.get_model_and_tokenizer(model_path)
-    console.print(f"[green]✓[/] Model loaded")
-    console.print()
+    c.print(f"[green]✓[/] Model loaded")
+    c.print()
 
     # Step 2: Training Configuration
-    console.print(f"[cyan]⚙️ Configuring training...[/]")
-    run_name = f"compressor-{base_model_name.split('/')[-1].lower()}"
-    train_args = vf.grpo_defaults(run_name=run_name)
-    train_args.num_iterations = num_iterations
-    train_args.output_dir = "outputs/compressor"
+    c.print(f"[cyan]⚙️ Configuring training...[/]")
+    grpo_args = vf.grpo_defaults(run_name=f"compressor-{base_model_name.split('/')[-1].lower()}")
+    grpo_args.num_iterations = num_iterations
+    grpo_args.output_dir = "outputs/compressor"
     # train_args.max_prompt_length = 4096 * 2
-    train_args.max_prompt_length = None # 4096 * 2
+    grpo_args.max_prompt_length = None  # 4096 * 2
 
     # --- Dataset Loading ---
-    console.print(f"[cyan]📊 Loading dataset...[/]")
+    c.print(f"[cyan]📊 Loading dataset...[/]")
     try:
         dataset = load_dataset('agentlans/wikipedia-paragraphs', split='train')
-        console.print("[green]✓[/] Wikipedia dataset loaded")
+        c.print("[green]✓[/] Wikipedia dataset loaded")
     except Exception as e:
-        console.print(f"[red]❌ Failed to load dataset: {e}[/red]")
+        c.print(f"[red]❌ Failed to load dataset: {e}[/red]")
         raise
 
     # --- Dataset Splitting ---
@@ -244,41 +243,39 @@ def train_compressor(model_path: str, base_model_name: str):
             train_dataset = dataset.select(range(50, 50 + train_size))
         else:
             train_dataset = dataset.select(range(0))  # Empty dataset
-        console.print(f"[green]✓[/] Split: {len(train_dataset)} train, {len(eval_dataset)} eval")
+        c.print(f"[green]✓[/] Split: {len(train_dataset)} train, {len(eval_dataset)} eval")
 
     elif isinstance(dataset, IterableDataset):
-        console.print("[yellow]⚠ Dataset is iterable, taking first 1500 items.[/]")
+        c.print("[yellow]⚠ Dataset is iterable, taking first 1500 items.[/]")
         items = list(dataset.take(1500))
 
         eval_dataset = ArrowDataset.from_list(items[:50])
         train_dataset = ArrowDataset.from_list(items[50:])
-        console.print(f"[green]✓[/] Processed: {len(train_dataset)} train, {len(eval_dataset)} eval")
+        c.print(f"[green]✓[/] Processed: {len(train_dataset)} train, {len(eval_dataset)} eval")
 
     else:
-        console.print(f"[red]Unsupported dataset type: {type(dataset)}. Stopping.[/]")
+        c.print(f"[red]Unsupported dataset type: {type(dataset)}. Stopping.[/]")
         raise TypeError(f"Cannot process dataset of type {type(dataset)}")
 
-    console.print()
+    c.print()
 
     # Display configuration table
-    train_table = Table(show_header=False, box=box.SIMPLE)
-    train_table.add_column("Parameter", style="cyan", width=25)
-    train_table.add_column("Value", style="white")
+    tb = Table(show_header=False, box=box.SIMPLE)
+    tb.add_column("Parameter", style="cyan", width=25)
+    tb.add_column("Value", style="white")
 
-    train_table.add_row("Alpha (compression)", f"{alpha}")
-    train_table.add_row("Beta (fidelity)", f"{beta}")
-    train_table.add_row("Max steps", f"{max_steps}")
-    train_table.add_row("Training samples", f"{len(train_dataset)}")
-    train_table.add_row("Batch size", f"{train_args.per_device_train_batch_size} prompts → {train_args.per_device_train_batch_size * 2} rollouts")
+    tb.add_row("Alpha (compression)", f"{alpha}")
+    tb.add_row("Beta (fidelity)", f"{beta}")
+    tb.add_row("Max steps", f"{max_steps}")
+    tb.add_row("Training samples", f"{len(train_dataset)}")
+    tb.add_row("Batch size", f"{grpo_args.per_device_train_batch_size} prompts → {grpo_args.per_device_train_batch_size * 2} rollouts")
 
-    console.print(train_table)
-    console.print()
+    c.print(tb)
+    c.print()
 
     # --- Environment Setup ---
-    console.print(f"[cyan]🏗️ Setting up environment...[/]")
-    compressor_env = HolowareEnv(
-        path="compressor.hol",
-        dataset=train_dataset,
+    c.print(f"[cyan]🏗️ Setting up environment...[/]")
+    compressor_env = HolowareEnv("compressor.hol", train_dataset, 'text',
         score_class=FidelityEvaluation,
         eval_dataset=eval_dataset,
         alpha=alpha,
@@ -286,32 +283,32 @@ def train_compressor(model_path: str, base_model_name: str):
         max_concurrent=8,
         dry_run=False
     )
-    console.print("[green]✓[/] Environment ready")
+    c.print("[green]✓[/] Environment ready")
 
     # Step 3: Trainer Setup
-    console.print(f"[cyan]🏋️ Creating trainer...[/]")
+    c.print(f"[cyan]🏋️ Creating trainer...[/]")
     trainer = vf.GRPOTrainer(
         model=model,
         processing_class=tokenizer,
         env=compressor_env,
-        args=train_args,
+        args=grpo_args,
     )
-    console.print(f"[green]✓[/] Trainer ready")
-    console.print()
+    c.print(f"[green]✓[/] Trainer ready")
+    c.print()
 
     # Step 4: Training Execution
-    console.print(f"[bold yellow]🚀 Training compressor...[/]")
+    c.print(f"[bold yellow]🚀 Training compressor...[/]")
     trainer.train()
-    console.print(f"[green]✓[/] Training completed")
-    console.print()
+    c.print(f"[green]✓[/] Training completed")
+    c.print()
 
     # Step 5: Model Saving
     output_path = "outputs/compressor"
-    console.print(f"[cyan]💾 Saving model to {output_path}...[/]")
+    c.print(f"[cyan]💾 Saving model to {output_path}...[/]")
     model.save_pretrained(output_path)
     tokenizer.save_pretrained(output_path)
-    console.print(f"[green]✓[/] Model saved")
-    console.print()
+    c.print(f"[green]✓[/] Model saved")
+    c.print()
 
     return output_path
 
@@ -323,8 +320,8 @@ def main():
     args = parser.parse_args()
 
     # Clear screen for full-screen experience
-    console.clear()
-    console.print(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
+    c.clear()
+    c.print(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
 
     # --- Model Configuration ---
     base_model_name = "Qwen/Qwen2.5-7B-Instruct"
@@ -337,9 +334,9 @@ def main():
     # --- Normal Training Flow ---
     # Starting model
     current_model_path = base_model_name
-    console.print(f"[dim]Base model: {base_model_name}[/]")
-    console.print(Rule(style="dim"))
-    console.print()
+    c.print(f"[dim]Base model: {base_model_name}[/]")
+    c.print(Rule(style="dim"))
+    c.print()
 
     os.makedirs("outputs", exist_ok=True)
 
@@ -347,16 +344,16 @@ def main():
         final_model_path = train_compressor(current_model_path, base_model_name)
 
         # Final completion with full-screen effect
-        console.print(Rule("[bold green]🏆 TRAINING COMPLETED", style="green"))
-        console.print(f"[bold green]🏆 Training finished successfully![/]")
-        console.print(f"[dim]Final model saved to: {final_model_path}[/]")
-        console.print(f"[dim]Usage: model, tokenizer = vf.get_model_and_tokenizer('{final_model_path}')[/]")
-        console.print(Rule(style="green"))
+        c.print(Rule("[bold green]🏆 TRAINING COMPLETED", style="green"))
+        c.print(f"[bold green]🏆 Training finished successfully![/]")
+        c.print(f"[dim]Final model saved to: {final_model_path}[/]")
+        c.print(f"[dim]Usage: model, tokenizer = vf.get_model_and_tokenizer('{final_model_path}')[/]")
+        c.print(Rule(style="green"))
 
     except Exception as e:
-        console.print(Rule("[red]❌ Training Failed", style="red"))
-        console.print(f"[bold red]❌ An error occurred during training: {e}[/]")
-        console.print(Rule(style="red"))
+        c.print(Rule("[red]❌ Training Failed", style="red"))
+        c.print(f"[bold red]❌ An error occurred during training: {e}[/]")
+        c.print(Rule(style="red"))
         raise
 
 if __name__ == "__main__":

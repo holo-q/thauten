@@ -13,7 +13,7 @@ from rich.table import Table
 from verifiers import Environment, Rubric
 
 import prompts
-from log import console
+from log import cl
 from prompts import format_conversation, PromptInstance, PromptLibrary, rollout_prompt
 
 logger = logging.getLogger(__name__)
@@ -94,8 +94,9 @@ class HolowareEnv(Environment):
 
     def __init__(
         self,
-        dataset: Dataset,
         path: str,
+        dataset: Dataset,
+        data_key: str,
         score_class: Type[VerificationModel],
         eval_dataset: Optional[Dataset] = None,
         eval_model: str = "Qwen/Qwen2.5-7B-Instruct",
@@ -128,7 +129,7 @@ class HolowareEnv(Environment):
             self.evaluator_model = None
 
         if dry_run:
-            console.print(self.holoware.to_rich_debug())
+            cl.print(self.holoware.to_rich_debug())
 
         def reward(prompt, completion, answer, state, **kwargs) -> float:
             return state.get("reward", 0.0)
@@ -137,6 +138,8 @@ class HolowareEnv(Environment):
         super().__init__(
             dataset=dataset,
             eval_dataset=eval_dataset,
+            question_key=data_key,
+            answer_key=data_key,
             system_prompt="",
             rubric=rubric,
             max_concurrent=max_concurrent,
@@ -181,9 +184,9 @@ class HolowareEnv(Environment):
         def get_evaluation(messages):
             return self.get_model_response(messages=messages, client=client, model=model, sampling_args=sampling_args, message_type='chat')
 
-        for sample in dataset:
-            original = sample.get('text', '')
+        prompts = dataset["prompt"]
 
+        for original in prompts:
             unrolled = rollout_prompt(self.holoware, get_generation, env={
                 "input":        original,
                 "original":     original,
@@ -206,7 +209,7 @@ class HolowareEnv(Environment):
                     logger.warning(f"Failed to parse or process evaluation JSON: {e}")
 
             if self.dry_run:
-                console.print(Panel(
+                cl.print(Panel(
                     unrolled.to_rich(),
                     title="[bold yellow]Dry Run: Full Conversation Flow[/]",
                     border_style="yellow",
@@ -262,7 +265,7 @@ class HolowareEnv(Environment):
 
     def log(self, conversation: PromptInstance, fidelity_score: float, reward: float) -> None:
         if self.dry_run:
-            console.print(Panel(
+            cl.print(Panel(
                 conversation.to_rich(),
                 title="[bold yellow]Dry Run: Full Conversation Flow[/]",
                 border_style="yellow",
@@ -288,7 +291,7 @@ class HolowareEnv(Environment):
             border_style="green",
             title_align="left"
         ))
-        console.print(grid)
+        cl.print(grid)
 
 
     def format_dataset(self,
@@ -297,4 +300,4 @@ class HolowareEnv(Environment):
                        few_shot: List[Dict[str, Any]] | None = None,
                        question_key: str = "text",
                        answer_key: str = "answer") -> Dataset:
-        return dataset
+        return dataset.map(lambda x: {"prompt": x[question_key], "answer": x[question_key]})
