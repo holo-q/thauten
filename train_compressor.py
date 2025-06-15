@@ -222,6 +222,7 @@ def train_compressor(model_path: str, base_model_name: str):
     train_args = vf.grpo_defaults(run_name=run_name)
     train_args.num_iterations = num_iterations
     train_args.output_dir = "outputs/compressor"
+    train_args.max_prompt_length = 4096 * 2
 
     # --- Dataset Loading ---
     console.print(f"[cyan]📊 Loading dataset...[/]")
