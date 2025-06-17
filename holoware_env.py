@@ -184,9 +184,9 @@ class HolowareEnv(Environment):
         def get_evaluation(messages):
             return self.get_model_response(messages=messages, client=client, model=model, sampling_args=sampling_args, message_type='chat')
 
-        prompts = dataset["prompt"]
+        prompt_list = dataset["prompt"]
 
-        for original in prompts:
+        for original in prompt_list:
             unrolled = rollout_prompt(self.holoware, get_generation, env={
                 "input":        original,
                 "original":     original,
