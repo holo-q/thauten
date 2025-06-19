@@ -211,6 +211,7 @@ This section with later demonstrate results and successes.
 
 Since we are very short on resources, we will be infinitely grateful for any compute grant or resources contributed.
 All work and research produced by HOLO-Q will always remain open-source.
+In the meantime we are limited to smaller models and rent compute from services like Vast.ai and Prime Intellect.
 
 Since all capabilities depend on the compression experiment's initial success, contributions should focus on
 training various different models with train-compressor.py and attempting to get a working prototype.
