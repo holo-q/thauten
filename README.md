@@ -6,7 +6,7 @@ An experimental reinforcement learning project testing the Semiodynamics Framewo
 
 ## Capability Objectives
 
-This project researches the first pillar of the [super-intelligence zip project](https://github.com/holo-q/zip/), which is the prompt engineering meta. In the context of reinforcement learning, it means breaking past every plateau to achieve infinite scaling of intelligence and capabilities.
+This project researches the auto-regressive meta of the [super-intelligence zip project](https://github.com/holo-q/zip/), which is the first pillar. In the context of reinforcement learning, it means breaking past every plateau to achieve infinite scaling of intelligence and capabilities.
 
 ### 1. Information Compressor
 
