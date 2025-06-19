@@ -34,9 +34,9 @@ Compress                                                                        
 :--------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:
 ![image](https://github.com/user-attachments/assets/a840741b-9536-4912-b4a6-69d06df396de)  |  ![image](https://github.com/user-attachments/assets/c12b5254-392b-49d7-9495-d57b1ff206c4)
 
-### 2. Transfer Learning
+### 2. Compression Reasoning
 
-Progressive development of reasoning capabilities through extension fences and representation instrumentation:
+After developping the model's ability to compress, we perform reinforcement learning again on reasoning task, this time constraining the model so that the `<think>` block be in the same compressed language. This reachieves the R1-zero reasoning process through a more intentional construction, first designing the language then bootstrapping reasoning traces on it. For the sake of simplicity and in anticipation of this concept being extended to omnimodal LLMs with vision and audio, we call the contents embedded in compressed tokens a "reality". The progressive development of reasoning capabilities through extension fences and instrumentation of reality may look like this:
 
 1. `<compress>` a reality.
 2. `<dream>` an extension reality prime within the same compression-space, steered by the internal value-maximization heuristic. (dream/imagine/induct)
