@@ -30,9 +30,13 @@ The SFT or prompting heuristic may require its own parallel evolution so that th
 
 **Demonstration in GPT-4**
 
+Below is a real demonstration of this capability being elicited by prompting as far back as GPT-4's release.
+
 Compress                                                                                      |                                             Decompress
 :--------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------:
 ![image](https://github.com/user-attachments/assets/a840741b-9536-4912-b4a6-69d06df396de)  |  ![image](https://github.com/user-attachments/assets/c12b5254-392b-49d7-9495-d57b1ff206c4)
+
+This proof of concept shows that the capability is present in some capacity within the pre-trained models and on standby for reinforcement.
 
 ### 2. Compression Reasoning
 
