@@ -9,12 +9,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+ "openai",
+ "transformers",
+ "vllm",
  "datasets>=3.6.0",
  "reasoning-gym>=0.1.20",
  "rich>=14.0.0",
  "torch>=2.6.0",
- "verifiers @ git+https://github.com/willccbb/verifiers@a3b7ffc",
  "ruff",
+ "rich",
+ "pytest"
 ]
 
 [tool.setuptools]

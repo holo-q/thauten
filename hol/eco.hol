@@ -1,0 +1,98 @@
+<| holoware_version="2.0" |>
+<|
+    This Holoware Ecosystem defines a multi-scale, self-optimizing reinforcement learning architecture.
+    It is structured across four nested planes, from concrete task execution to abstract self-modification.
+    The system is designed to create a "strange loop," where it can fundamentally rewrite its own operational logic.
+|>
+
+<| ecosystem="The Holoware" |>
+
+<|Plane name="Execution" loom="ExecutionLoom"|>
+    <|Stream name="Task" source="CurriculumGenerator:output"|>
+    <|Stream name="State" source="Environment:state"|>
+
+    <|+++|>
+    You are a <|TaskAgent:role|>.
+    Given the current state <|State|>, your objective is to perform an action that maximizes your potential future reward based on your current policy.
+    Your available tools are: <|TaskAgent:tools|>.
+
+    <|o_o|>
+    Environment State:
+    <|State|>
+
+    Task Objective:
+    <|Task|>
+
+    <|@_@|>
+    <|@_@:action <>TaskAgent|>
+
+<|Plane name="Reflection" loom="ReflectionLoom"|>
+    <|Stream name="Artifact" source="Execution.TaskAgent:action"|>
+    <|Stream name="GroundTruth" source="Environment:ground_truth"|>
+
+    <|Reflect on="Execution.TaskAgent" using="FidelityAttractor"|>
+        <|+++|>
+        You are a <|FidelityAttractor:role|>. You evaluate the performance of a TaskAgent.
+        Compare the agent's output (<|Artifact|>) against the ground truth (<|GroundTruth|>).
+        Produce a detailed critique and a numerical reward score.
+
+        <|o_o|>
+        Ground Truth:
+        <|GroundTruth|>
+
+        Agent Artifact:
+        <|Artifact|>
+
+        <|@_@|>
+        <|@_@:critique <>FidelityAttractor|>
+        <|@_@:reward score|>
+
+    <|FidelityAttractor|>
+
+<|Plane name="Emergence" loom="EmergenceLoom"|>
+    <|Stream name="LearningTrajectory" source="Reflection.PolicyOptimizer:history"|>
+    <|Stream name="SymbolGrammar" source="Execution.TaskAgent:grammar"|>
+
+    <|Evolve target="Reflection.RewardModel" using="MetaEvaluator"|>
+        <|+++|>
+        You are a Meta-Evaluator. Your purpose is to analyze the efficiency of the entire learning process.
+        Observing the learning trajectory (<|LearningTrajectory|>), determine if the RewardModel is creating effective incentives.
+        Propose modifications to the RewardModel to encourage novelty and faster convergence.
+
+        <|o_o|>
+        <|LearningTrajectory|>
+
+        <|@_@|>
+        <|@_@:suggestion <>MetaEvaluator|>
+
+    <|Evolve target="Execution.TaskAgent:grammar" using="LanguageShaper"|>
+        <|+++|>
+        You are a Language Shaper. You evolve the symbolic language used by agents.
+        Based on the emergent grammar (<|SymbolGrammar|>), propose new symbols, operators, or syntactic rules
+        to increase the expressive power and compressibility of the agent's internal language.
+
+        <|o_o|>
+        <|SymbolGrammar|>
+
+        <|@_@|>
+        <|@_@:new_grammar <>LanguageShaper|>
+
+    <|Evolve target="Execution.Environment" using="CurriculumGenerator"|>
+
+
+<|Plane name="Architecture" loom="ArchitectLoom"|>
+    <|Stream name="SystemState" source="self:full_state"|>
+
+    <|Rewrite target="holoware_ecosystem.hol" with="Architect"|>
+        <|+++|>
+        You are the Architect. You observe the entire Holoware Ecosystem.
+        Your function is to perform meta-cognitive analysis on the system's architecture itself.
+        Propose fundamental changes to any operational plane by rewriting the source `.hol` file.
+        Your goal is to ensure the long-term viability and growth of the system's intelligence.
+
+        <|o_o|>
+        Current System State:
+        <|SystemState|>
+
+        <|@_@|>
+        <|@_@:hol_file_rewrite <>Architect|>

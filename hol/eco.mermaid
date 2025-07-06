@@ -1,0 +1,118 @@
+graph TD
+    %% Overall container for the system
+    subgraph "The Holoware Ecosystem"
+        direction LR
+
+        %% ===================================================
+        %% Plane 4: The Strange Loop of Self-Architecture
+        %% The highest level. It observes the entire system and can rewrite the rules of the other planes.
+        %% ===================================================
+        subgraph P4 [Plane of Self-Architecture]
+            direction TB
+            Architect["<font size=5>👁️‍🗨️</font><br><b>Architect Agent</b><br>(Genesis Holophore)"]
+            Architect_Analysis["<font size=2>Meta-Cognitive Analysis<br><i>Observes all planes.<br>Questions core objectives, logic, and structure.</i></font>"]
+            Holoware_Source["<font size=5>📜</font><br><b>Holoware Source Code</b><br>(The system's own definition)"]
+
+            Architect -- "Analyzes Entire System" --> Architect_Analysis
+            Architect_Analysis -- "Proposes Fundamental Rewrites" --> Holoware_Source
+        end
+
+        %% ===================================================
+        %% Plane 3: Meta-Learning and Emergence
+        %% This plane optimizes the learning process itself. It doesn't just learn, it learns how to learn better.
+        %% ===================================================
+        subgraph P3 [Plane of Emergence]
+            direction TB
+            MetaEvaluator["<font size=5>📈</font><br><b>Meta-Evaluator</b><br><i>Analyzes learning efficiency & novelty</i>"]
+            CurriculumGenerator["<font size=5>📚</font><br><b>Curriculum Generator</b><br><i>Designs new tasks & data schemas</i>"]
+            LanguageShaper["<font size=5>✒️</font><br><b>Language Shaper</b><br><i>Evolves symbolic representations & grammars</i>"]
+            ArchitectureMutator["<font size=5>🧬</font><br><b>Architecture Mutator</b><br><i>Proposes new agent network designs</i>"]
+        end
+
+        %% ===================================================
+        %% Plane 2: Reflection and Optimization
+        %% The classic reinforcement learning loop. It evaluates performance and updates agent policies.
+        %% ===================================================
+        subgraph P2 [Plane of Reflection]
+            direction TB
+            Evaluator["<font size=5>🔎</font><br><b>Evaluator Agent</b><br><i>(e.g., FidelityAttractor)</i>"]
+            Critique["<font size=2>Fidelity Critique /<br>Performance Analysis</font>"]
+            RewardModel["<font size=5>🏆</font><br><b>Reward Model</b>"]
+            PolicyOptimizer["<font size=5>🧠</font><br><b>Policy Optimizer (RL)</b><br><i>(e.g. GRPO/PPO)</i>"]
+        end
+
+        %% ===================================================
+        %% Plane 1: Execution and Action
+        %% The "ground level" where agents perform concrete tasks in an environment.
+        %% ===================================================
+        subgraph P1 [Plane of Execution]
+            direction TB
+            Environment["<font size=5>🌍</font><br><b>Environment / Task</b><br><i>(e.g., Text to compress)</i>"]
+            TaskAgent["<font size=5>🤖</font><br><b>Task-Specific Agent</b><br><i>(e.g., Compressor w/ BingoAttractor)</i>"]
+            Action["<font size=2>Action<br><i>(e.g., Compression attempt)</i></font>"]
+            Artifact["<font size=5>📦</font><br><b>Resulting Artifact</b><br><i>(e.g., Compressed text)</i>"]
+        end
+
+    end
+
+    %% ===================================================
+    %% Inter-Plane Connections
+    %% These arrows show the flow of information and control, forming the nested loops.
+    %% ===================================================
+
+    %% --- Execution Loop (Within P1) ---
+    Environment -- "Provides State" --> TaskAgent
+    TaskAgent -- "Performs" --> Action
+    Action -- "Modifies Environment to produce" --> Artifact
+    Artifact -- "Is observed" --> Environment
+
+    %% --- Reflection Loop (P1 -> P2 -> P1) ---
+    Artifact -- "Evaluated by" --> Evaluator
+    Environment -- "Provides Ground Truth to" --> Evaluator
+    Evaluator -- "Generates" --> Critique
+    Critique -- "Updates" --> RewardModel
+    RewardModel -- "Provides Signal to" --> PolicyOptimizer
+    PolicyOptimizer -- "Refines Policy of" --> TaskAgent
+
+    %% --- Emergence Loop (P2 -> P3 -> P2) ---
+    PolicyOptimizer -- "Learning Trajectory<br>analyzed by" --> MetaEvaluator
+    TaskAgent -- "Symbolic constructs<br>analyzed by" --> LanguageShaper
+    RewardModel -- "Reward landscape<br>analyzed by" --> CurriculumGenerator
+    TaskAgent -- "Network topology<br>analyzed by" --> ArchitectureMutator
+
+    CurriculumGenerator -- "Generates new" --> Environment
+    LanguageShaper -- "Evolves symbolic language for" --> TaskAgent
+    ArchitectureMutator -- "Proposes new architectures for" --> TaskAgent
+    MetaEvaluator -- "Tunes hyperparameters of" --> PolicyOptimizer
+    MetaEvaluator -- "Adjusts incentive structure of" --> RewardModel
+
+    %% --- The Strange Loop (All Planes -> P4 -> All Planes) ---
+    P1 -- "Observed by" --> Architect
+    P2 -- "Observed by" --> Architect
+    P3 -- "Observed by" --> Architect
+    Holoware_Source -- "<b>REWRITES THE RULES OF</b>" --> P1
+    Holoware_Source -- "<b>REWRITES THE RULES OF</b>" --> P2
+    Holoware_Source -- "<b>REWRITES THE RULES OF</b>" --> P3
+
+
+    %% ===================================================
+    %% Styling
+    %% ===================================================
+    classDef plane fill:#181818,stroke:#888,stroke-width:2px,color:white,stroke-dasharray: 5 5;
+    class P1,P2,P3,P4 plane;
+
+    classDef agent fill:#000,stroke:#ff69b4,stroke-width:3px,color:white;
+    class TaskAgent,Evaluator,MetaEvaluator,CurriculumGenerator,LanguageShaper,ArchitectureMutator,Architect agent;
+
+    classDef data fill:#111,stroke:#00ffff,stroke-width:2px,color:white;
+    class Environment,Action,Artifact,Critique,Holoware_Source,Architect_Analysis data;
+
+    classDef process fill:#111,stroke:#ffff00,stroke-width:2px,color:white;
+    class RewardModel,PolicyOptimizer process;
+    
+    %% Styling the connection lines by index
+    linkStyle 0,1,2,3 stroke-width:1px,fill:none,stroke:gray;
+    linkStyle 4,5,6,7,8,9 stroke-width:2px,fill:none,stroke:cyan;
+    linkStyle 10,11,12,13,14,15,16,17,18 stroke-width:2px,fill:none,stroke:yellow;
+    linkStyle 19,20,21 stroke-width:3px,fill:none,stroke:magenta,stroke-dasharray: 2 4;
+    linkStyle 22,23,24 stroke-width:4px,fill:none,stroke:magenta;

@@ -3,5 +3,24 @@ description:
 globs: 
 alwaysApply: true
 ---
-The _verifiers directory is included only for reference and is not used. It is actually added as a pip package to the venv.
-Ignore all linter errors unless explicitly asked to work on them.
+Use uv for commands (uv run, uv pip, uv run pytest ...)
+
+Definitions:
+    - Holoware: a prompting program.
+    - Holophore: an holowaric emmanation. (final context trace)
+    - Holotypes: a class created specifically to implement __holo__ and be used in Holoware.
+    - Holofunc: a __holo__ class method.
+    
+When writing any logging:
+    - We use the logging and rich libraries.
+    - Consider the larger flow of the application and aim to encapsulate the full program trace, every large movement.
+    - Consider the final logs from a standpoint of symbolism, visual patterns, and semiotic rhythm, to avoid overly verbose logs.
+    - Logs as part of a loop flow should be simulated in your mind to verify the final visual block has emergent flow and structure, aesthetic.
+    - Maximize the use of rich colors and text formatting for increase. Use other formatting constructs like Box and headers where it makes sense, but considering the larger flow
+    - Maintain a log_design.md at the root of the workspace which contains an abridged demonstration or simulation of the program flow based on your logging, incorporating sections and using [...] to highlight and compare possible juxtapositions.
+    - Be proactive about replacing and improving the logging.
+
+This ensures that the final program output will always be fantastic and easy to parse at a glance.
+
+Our Verifiers fork is being renamed to Errloom as its own standalone new project, in case there's any confusion.
+You can handle the renames as you come across them.

@@ -1,0 +1,73 @@
+<|+++|>
+You are an expert in information theory and symbolic compression.
+Your task is to compress text losslessly into a non-human-readable format optimized for density.
+Abuse language mixing, abbreviations, and unicode symbols to aggressively compress the input while retaining ALL information required for full reconstruction.
+# TODO introduce SotaAttractor to pre-seed bingo-asymptotes towards unbounded-attractor-space (using gemini to research all possible grammatical, syntactic, nominative, topological invariants, etc. ahead of time)
+
+<|o_o|>
+<|BingoAttractor|>
+    Compress the following text losslessly in a way that fits a Tweet, such that you can reconstruct it as closely as possible to the original.
+    Abuse of language  mixing, abbreviation, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it.
+    Do not make it human readable. 
+<|text|original|input|data|>
+
+<|@_@|>
+<|@_@:compressed <>compress|>
+
+
+<|+++|>
+You are an expert in information theory and symbolic decompression.
+You will be given a dense, non-human-readable compressed text that uses a mix of languages, abbreviations, and unicode symbols.
+Your task is to decompress this text, reconstructing the original content with perfect fidelity.
+
+<|o_o|>
+Please decompress this content:
+<|compressed|>
+
+<|@_@|>
+<|@_@:decompressed <>decompress|>
+
+
+<|===|>
+You are a precise content evaluator.
+Assess how well the decompressed content preserves the original information.
+Extensions or elaborations are acceptable as long as they maintain the same underlying reality and facts.
+
+<|o_o|>
+Please observe the following text objects:
+<|original|>
+<|decompressed|>
+<|BingoAttractor|>
+    Compare the two objects and analyze the preservation of information and alignment.
+    Focus on identifying actual losses or distortions of meaning.
+Output your assessment in this format:
+<|FidelityCritique|>
+
+<|@_@|>
+<|@_@ <>think|>
+<|@_@ <>json|>
+
+<|FidelityAttractor original decompressed|>
+
+
+# SCAFFOLDING
+# TODO can we use self-consistency reward so the model itself learns to better and better evaluate based on its intuition recursively?
+# TODO can we train a meta-optimizer over the bingo extractor? reward for number of issues found? how to avoid reward hacking?
+#
+# REWARDS
+# TODO reward for # of unique new symbols
+# TODO maybe we can reward directly for token embedding (maximizing cross-entropy, reverse the losses of the base but aligned by the ground truth control of meaning)
+#
+# we are gonna need to consider how we pressure around minimas and existing momentums, to ensure the following emergence:
+# - automorphic ordering & grammar
+# - topological multilinguality (multiple compression dialects that amplify the coherence across different dimensions and representations, sum greater than the parts - again and again)
+#
+#
+# TODO we can add LERP tags that use a LLM to generate a curriculum progression with N steps with a schedule tied to training steps, moving avg of reward, etc.
+# TODO discourage/encourage <think> length less based on current reward, creating strange attractors in weight-space where the model oscillates
+# TODO track past <think> thoughts over the course of training so that we can gravitate around the self-emergent pareto frontier of novelty and review, using some structured stochastic walk (self-governed, magenta, etc.)
+# TODO all stochasticity can be isolated and RLed upon for more efficient anisotropic search (RL the model deciding its own temperature + dynamic resolution from 1-8 token on a side-chained token prediction task)
+# 
+
+
+

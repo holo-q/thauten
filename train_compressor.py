@@ -61,21 +61,19 @@ The system auto-detects format based on "# Multi-turn conversation format" heade
 """
 import logging
 import os
-from typing import List, Literal
 
-import numpy as np
-import verifiers as vf
 from datasets import load_dataset
 from datasets.arrow_dataset import Dataset as ArrowDataset
 from datasets.iterable_dataset import IterableDataset
-from pydantic import Field
 from rich import box
 # Rich imports for beautiful output
 from rich.rule import Rule
 from rich.table import Table
 
-from holoware_env import HolowareEnv, logger, VerificationModel
-from log import cl as c
+import verifiers as vf
+from fidelity_attractor import FidelityCritique
+from errloom.holoware.holoware_loom import HolowareLoom, logger
+from errloom.log import cl as c
 
 # Create rich console
 
@@ -87,65 +85,6 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("torch").setLevel(logging.ERROR)
 logging.getLogger("accelerate").setLevel(logging.ERROR)
 
-class FidelityEvaluation(VerificationModel):
-    """
-    A structured representation of a fidelity evaluation, comparing an original
-    text with its decompressed counterpart.
-    """
-    deviations: List[str] = Field(
-        default=[],
-        description="List of factual changes or alterations from the original."
-    )
-    inaccuracies: List[str] = Field(
-        default=[],
-        description="List of incorrect information introduced in the decompressed text."
-    )
-    missing_statements: List[str] = Field(
-        default=[],
-        description="List of important information from the original that was lost."
-    )
-    acceptable_extensions: List[str] = Field(
-        default=[],
-        description="List of valid elaborations or extensions that don't contradict the original."
-    )
-    severity: Literal["MINOR", "MODERATE", "MAJOR"] = Field(
-        description="The overall severity of the issues found."
-    )
-    quality: Literal["EXCELLENT", "GOOD", "FAIR", "POOR"] = Field(
-        description="The overall quality of the decompression."
-    )
-
-    @property
-    def total_issues(self) -> int:
-        """Calculates the total number of issues found."""
-        return len(self.deviations) + len(self.inaccuracies) + len(self.missing_statements)
-
-    def get_verification_score(self) -> float:
-        """
-        Calculates a numerical fidelity score based on the evaluation fields.
-        The score ranges from 0.0 to 1.0.
-        """
-        fid = 1.0
-
-        if self.total_issues > 0:
-            base_penalty = 0.1
-            severity_multiplier = {
-                'MINOR':    0.5,
-                'MODERATE': 1.0,
-                'MAJOR':    2.0
-            }.get(self.severity, 1.0)
-            penalty = min(self.total_issues * base_penalty * severity_multiplier, 0.9)
-            fid -= penalty
-
-        quality_adjustments = {
-            'EXCELLENT': 0.0,
-            'GOOD':      -0.05,
-            'FAIR':      -0.15,
-            'POOR':      -0.3
-        }
-        fid += quality_adjustments.get(self.quality, 0.0)
-
-        return np.clip(fid, 0.0, 1.0)
 
 def execute_dry_run():
     """
@@ -164,40 +103,33 @@ def execute_dry_run():
         return
 
     # --- 2. Prepare a few samples ---
-    sample_size = 10
+    slice_size = 10
     try:
-        dataset_sel = list(dataset.take(sample_size))
-        if len(dataset_sel) < sample_size:
-            c.print(f"[yellow]Warning: Could only fetch {len(dataset_sel)} samples for the dry run.[/yellow]")
-        if not dataset_sel:
+        dataset_slice = list(dataset.take(slice_size))
+        if len(dataset_slice) < slice_size:
+            c.print(f"[yellow]Warning: Could only fetch {len(dataset_slice)} samples for the dry run.[/yellow]")
+        if not dataset_slice:
             c.print("[red]Not enough data in the training set to perform a dry run.[/red]")
             return
-        dataset_sel = ArrowDataset.from_list(dataset_sel)
+        dataset_slice = ArrowDataset.from_list(dataset_slice)
 
     except Exception as e:
         c.print(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
         return
 
     # --- 3. Create a Dry-Run-Specific Environment ---
-    env = HolowareEnv(
+    env = HolowareLoom(
         'compressor.hol',
-        dataset_sel,
-        'text',
-        score_class=FidelityEvaluation,
-        eval_dataset=None,
+        dataset=dataset_slice,
+        critique_class=FidelityCritique,
         alpha=0.05,
         beta=1.5,
-        dry_run=True,
+        dry=True
     )
 
     # --- 4. Manually trigger rollouts ---
-    c.print(f"Generating {len(dataset_sel)} sample contexts without running any models...")
-    env.generate(
-        dataset=dataset_sel,
-        client=None,
-        model="dry-run-model",
-        sampling_args={}
-    )
+    c.print(f"Generating {len(dataset_slice)} sample contexts without running any models...")
+    env.unroll(dataset_slice)
     c.print(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
 def train_compressor(model_path: str):
@@ -275,8 +207,8 @@ def train_compressor(model_path: str):
 
     # --- Environment Setup ---
     c.print(f"[cyan]🏗️ Setting up environment...[/]")
-    compressor_env = HolowareEnv("compressor.hol", train_dataset, 'text',
-        score_class=FidelityEvaluation,
+    loom = HolowareLoom("compressor.hol", train_dataset, 'text',
+        critique_class=FidelityCritique,
         eval_dataset=eval_dataset,
         eval_model=model_path,
         alpha=alpha,
@@ -291,7 +223,7 @@ def train_compressor(model_path: str):
     trainer = vf.GRPOTrainer(
         model=model,
         processing_class=tokenizer,
-        env=compressor_env,
+        loom=loom,
         args=grpo_args,
     )
     c.print(f"[green]✓[/] Trainer ready")
