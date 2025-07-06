@@ -311,3 +311,4 @@ _verifiers/dist/
 # UV package manager
 .uv_cache/
 uv.lock
+errloom
