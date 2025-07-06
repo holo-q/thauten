@@ -70,9 +70,11 @@ from rich import box
 from rich.rule import Rule
 from rich.table import Table
 
-import verifiers as vf
+from errloom.trainers import grpo_defaults
+from errloom.trainers.grpo_trainer import GRPOTrainer
+from errloom.utils.model_utils import get_model_and_tokenizer
 from fidelity_attractor import FidelityCritique
-from errloom.holoware.holoware_loom import HolowareLoom, logger
+from errloom.holoom import HolowareLoom, logger
 from errloom.log import cl as c
 
 # Create rich console
@@ -84,7 +86,6 @@ logging.getLogger("datasets").setLevel(logging.ERROR)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("torch").setLevel(logging.ERROR)
 logging.getLogger("accelerate").setLevel(logging.ERROR)
-
 
 def execute_dry_run():
     """
@@ -144,13 +145,13 @@ def train_compressor(model_path: str):
     # Step 1: Model Loading
     c.print(f"[cyan]📦 Loading model: {model_path}[/]")
 
-    model, tokenizer = vf.get_model_and_tokenizer(model_path)
+    model, tokenizer = get_model_and_tokenizer(model_path)
     c.print(f"[green]✓[/] Model loaded")
     c.print()
 
     # Step 2: Training Configuration
     c.print(f"[cyan]⚙️ Configuring training...[/]")
-    grpo_args = vf.grpo_defaults(run_name=f"compressor-{model_path.split('/')[-1].lower()}")
+    grpo_args = grpo_defaults(run_name=f"compressor-{model_path.split('/')[-1].lower()}")
     grpo_args.num_iterations = num_iterations
     grpo_args.output_dir = "outputs/compressor"
     # train_args.max_prompt_length = 4096 * 2
@@ -207,25 +208,19 @@ def train_compressor(model_path: str):
 
     # --- Environment Setup ---
     c.print(f"[cyan]🏗️ Setting up environment...[/]")
-    loom = HolowareLoom("compressor.hol", train_dataset, 'text',
-        critique_class=FidelityCritique,
+    loom = HolowareLoom(
+        path="compressor.hol",
+        dataset=train_dataset,
         eval_dataset=eval_dataset,
-        eval_model=model_path,
+        critique_class=FidelityCritique,
         alpha=alpha,
-        beta=beta,
-        max_concurrent=8,
-        dry_run=False
+        beta=beta
     )
     c.print("[green]✓[/] Environment ready")
 
-    # Step 3: Trainer Setup
-    c.print(f"[cyan]🏋️ Creating trainer...[/]")
-    trainer = vf.GRPOTrainer(
-        model=model,
-        processing_class=tokenizer,
-        loom=loom,
-        args=grpo_args,
-    )
+    # Step 3: Trainer Initialization
+    c.print(f"[cyan]👟 Initializing trainer...[/]")
+    trainer = GRPOTrainer(loom=loom, model=model, processing_class=tokenizer, args=grpo_args)
     c.print(f"[green]✓[/] Trainer ready")
     c.print()
 
