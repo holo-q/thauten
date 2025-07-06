@@ -22,6 +22,10 @@ and communicate efficiently back and forth to avoid misunderstandings.
 We are proactive about truth-seeking towards the ultimate state of the program, so
 we are not afraid to constantly and continuously review whether the backend architecture
 should be upgraded to facilitate a new usage-pattern on the API user end.
+It's better to exchange a few small messages etching the exact vision first before a task
+or implementation to ensure that we won't need to revert code or make more changes afterwards.
+Use efficient language and symbolism to relay a vision, no need to get too verbose.
+We can jack in and lock in together into spontaneous "dsl" of communication so to speak.
 
 Always check git status and diffs before making a commit.
 There may be other stuff than what we worked on.

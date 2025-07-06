@@ -70,14 +70,10 @@ from rich import box
 from rich.rule import Rule
 from rich.table import Table
 
-from errloom.trainers import grpo_defaults
-from errloom.trainers.grpo_trainer import GRPOTrainer
-from errloom.utils.model_utils import get_model_and_tokenizer
 from fidelity_attractor import FidelityCritique
+from errloom.utils.model_utils import get_model_and_tokenizer
 from errloom.holoom import HolowareLoom, logger
 from errloom.log import cl as c
-
-# Create rich console
 
 # Set up Rich logging to capture all logs
 
@@ -87,20 +83,30 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("torch").setLevel(logging.ERROR)
 logging.getLogger("accelerate").setLevel(logging.ERROR)
 
+def log(*s):
+    c.print(s)
+
+def logc():
+    c.clear()
+
+def logl(s):
+    c.print(s)
+    c.print()
+
 def execute_dry_run():
     """
     Handles the dry run logic entirely, without instantiating the trainer.
     """
-    c.print(Rule("[bold yellow]DRY RUN MODE[/]"))
+    log(Rule("[bold yellow]DRY RUN MODE[/]"))
 
     # --- 1. Load Dataset ---
     try:
         dataset = load_dataset('agentlans/wikipedia-paragraphs', split='train', streaming=True)
         if not isinstance(dataset, IterableDataset):
-            c.print(f"[red]❌ Expected an IterableDataset for streaming, but got {type(dataset)}.[/red]")
+            log(f"[red]❌ Expected an IterableDataset for streaming, but got {type(dataset)}.[/red]")
             return
     except Exception as e:
-        c.print(f"[red]❌ Failed to load dataset for dry run: {e}[/red]")
+        log(f"[red]❌ Failed to load dataset for dry run: {e}[/red]")
         return
 
     # --- 2. Prepare a few samples ---
@@ -108,14 +114,14 @@ def execute_dry_run():
     try:
         dataset_slice = list(dataset.take(slice_size))
         if len(dataset_slice) < slice_size:
-            c.print(f"[yellow]Warning: Could only fetch {len(dataset_slice)} samples for the dry run.[/yellow]")
+            log(f"[yellow]Warning: Could only fetch {len(dataset_slice)} samples for the dry run.[/yellow]")
         if not dataset_slice:
-            c.print("[red]Not enough data in the training set to perform a dry run.[/red]")
+            log("[red]Not enough data in the training set to perform a dry run.[/red]")
             return
         dataset_slice = ArrowDataset.from_list(dataset_slice)
 
     except Exception as e:
-        c.print(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
+        log(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
         return
 
     # --- 3. Create a Dry-Run-Specific Environment ---
@@ -129,9 +135,9 @@ def execute_dry_run():
     )
 
     # --- 4. Manually trigger rollouts ---
-    c.print(f"Generating {len(dataset_slice)} sample contexts without running any models...")
+    log(f"Generating {len(dataset_slice)} sample contexts without running any models...")
     env.unroll(dataset_slice)
-    c.print(Rule("[yellow]DRY RUN COMPLETE[/]"))
+    log(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
 def train_compressor(model_path: str):
     """Train the compressor model in a single stage."""
@@ -142,28 +148,22 @@ def train_compressor(model_path: str):
     max_steps = 300
     num_iterations = 4
 
-    # Step 1: Model Loading
-    c.print(f"[cyan]📦 Loading model: {model_path}[/]")
-
+    log(f"[cyan]📦 Loading model: {model_path}[/]")
     model, tokenizer = get_model_and_tokenizer(model_path)
-    c.print(f"[green]✓[/] Model loaded")
-    c.print()
 
-    # Step 2: Training Configuration
-    c.print(f"[cyan]⚙️ Configuring training...[/]")
+    log(f"[cyan]⚙️ Configuring training...[/]")
+    from errloom.trainers import grpo_defaults
     grpo_args = grpo_defaults(run_name=f"compressor-{model_path.split('/')[-1].lower()}")
     grpo_args.num_iterations = num_iterations
     grpo_args.output_dir = "outputs/compressor"
-    # train_args.max_prompt_length = 4096 * 2
     grpo_args.max_prompt_length = None  # 4096 * 2
 
-    # --- Dataset Loading ---
-    c.print(f"[cyan]📊 Loading dataset...[/]")
+    log(f"[cyan]📊 Loading dataset...[/]")
     try:
         dataset = load_dataset('agentlans/wikipedia-paragraphs', split='train')
-        c.print("[green]✓[/] Wikipedia dataset loaded")
+        log("[green]✓[/]")
     except Exception as e:
-        c.print(f"[red]❌ Failed to load dataset: {e}[/red]")
+        log(f"[red]❌ Failed to load dataset: {e}[/red]")
         raise
 
     # --- Dataset Splitting ---
@@ -176,21 +176,21 @@ def train_compressor(model_path: str):
             train_dataset = dataset.select(range(50, 50 + train_size))
         else:
             train_dataset = dataset.select(range(0))  # Empty dataset
-        c.print(f"[green]✓[/] Split: {len(train_dataset)} train, {len(eval_dataset)} eval")
+        log(f"[green]✓[/] Split: {len(train_dataset)} train, {len(eval_dataset)} eval")
 
     elif isinstance(dataset, IterableDataset):
-        c.print("[yellow]⚠ Dataset is iterable, taking first 1500 items.[/]")
+        log("[yellow]⚠ Dataset is iterable, taking first 1500 items.[/]")
         items = list(dataset.take(1500))
 
         eval_dataset = ArrowDataset.from_list(items[:50])
         train_dataset = ArrowDataset.from_list(items[50:])
-        c.print(f"[green]✓[/] Processed: {len(train_dataset)} train, {len(eval_dataset)} eval")
+        log(f"[green]✓[/] Processed: {len(train_dataset)} train, {len(eval_dataset)} eval")
 
     else:
-        c.print(f"[red]Unsupported dataset type: {type(dataset)}. Stopping.[/]")
+        log(f"[red]Unsupported dataset type: {type(dataset)}. Stopping.[/]")
         raise TypeError(f"Cannot process dataset of type {type(dataset)}")
 
-    c.print()
+    log()
 
     # Display configuration table
     tb = Table(show_header=False, box=box.SIMPLE)
@@ -203,40 +203,37 @@ def train_compressor(model_path: str):
     tb.add_row("Training samples", f"{len(train_dataset)}")
     tb.add_row("Batch size", f"{grpo_args.per_device_train_batch_size} prompts → {grpo_args.per_device_train_batch_size * 2} rollouts")
 
-    c.print(tb)
-    c.print()
+    logl(tb)
 
     # --- Environment Setup ---
-    c.print(f"[cyan]🏗️ Setting up environment...[/]")
+    log(f"[cyan]🏗️ Setting up environment...[/]")
     loom = HolowareLoom(
-        path="compressor.hol",
+        path="hol/compressor.hol",
         dataset=train_dataset,
         eval_dataset=eval_dataset,
         critique_class=FidelityCritique,
         alpha=alpha,
         beta=beta
     )
-    c.print("[green]✓[/] Environment ready")
+    logl("[green]✓[/] Environment ready")
 
     # Step 3: Trainer Initialization
-    c.print(f"[cyan]👟 Initializing trainer...[/]")
+    log(f"[cyan]👟 Initializing trainer...[/]")
+    from errloom.trainers.grpo_trainer import GRPOTrainer
     trainer = GRPOTrainer(loom=loom, model=model, processing_class=tokenizer, args=grpo_args)
-    c.print(f"[green]✓[/] Trainer ready")
-    c.print()
+    logl(f"[green]✓[/] Trainer ready")
 
     # Step 4: Training Execution
-    c.print(f"[bold yellow]🚀 Training compressor...[/]")
+    log(f"[bold yellow]🚀 Training compressor...[/]")
     trainer.train()
-    c.print(f"[green]✓[/] Training completed")
-    c.print()
+    logl(f"[green]✓[/] Training completed")
 
     # Step 5: Model Saving
     output_path = "outputs/compressor"
-    c.print(f"[cyan]💾 Saving model to {output_path}...[/]")
+    log(f"[cyan]💾 Saving model to {output_path}...[/]")
     model.save_pretrained(output_path)
     tokenizer.save_pretrained(output_path)
-    c.print(f"[green]✓[/] Model saved")
-    c.print()
+    logl(f"[green]✓[/] Model saved")
 
     return output_path
 
@@ -249,8 +246,8 @@ def main():
     args = parser.parse_args()
 
     # Clear screen for full-screen experience
-    c.clear()
-    c.print(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
+    logc()
+    log(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
 
     # --- Model Configuration ---
     # Determine data_key for the dry run env
@@ -260,9 +257,9 @@ def main():
 
     # --- Normal Training Flow ---
     # Starting model
-    c.print(f"[dim]Base model: {args.model_path}[/]")
-    c.print(Rule(style="dim"))
-    c.print()
+    log(f"[dim]Base model: {args.model_path}[/]")
+    log(Rule(style="dim"))
+    log()
 
     os.makedirs("outputs", exist_ok=True)
 
@@ -270,19 +267,21 @@ def main():
         final_model_path = train_compressor(args.model_path)
 
         # Final completion with full-screen effect
-        c.print(Rule("[bold green]🏆 TRAINING COMPLETED", style="green"))
-        c.print(f"[bold green]🏆 Training finished successfully![/]")
-        c.print(f"[dim]Final model saved to: {final_model_path}[/]")
-        c.print(f"[dim]Usage: model, tokenizer = vf.get_model_and_tokenizer('{final_model_path}')[/]")
-        c.print(Rule(style="green"))
+        log(Rule("[bold green]🏆 TRAINING COMPLETED", style="green"))
+        log(f"[bold green]🏆 Training finished successfully![/]")
+        log(f"[dim]Final model saved to: {final_model_path}[/]")
+        log(f"[dim]Usage: model, tokenizer = vf.get_model_and_tokenizer('{final_model_path}')[/]")
+        log(Rule(style="green"))
 
     except Exception as e:
-        c.print(Rule("[red]❌ Training Failed", style="red"))
-        c.print(f"[bold red]❌ An error occurred during training: {e}[/]")
-        c.print(Rule(style="red"))
+        log(Rule("[red]❌ Training Failed", style="red"))
+        log(f"[bold red]❌ An error occurred during training: {e}[/]")
+        log(Rule(style="red"))
         raise
 
 if __name__ == "__main__":
+    from errloom.holoware import Holoware
+    from errloom.attractors import BingoAttractor
     try:
         main()
     except KeyboardInterrupt:
