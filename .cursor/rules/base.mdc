@@ -3,24 +3,58 @@ description:
 globs: 
 alwaysApply: true
 ---
-Use uv for commands (uv run, uv pip, uv run pytest ...)
 
-Definitions:
-    - Holoware: a prompting program.
-    - Holophore: an holowaric emmanation. (final context trace)
-    - Holotypes: a class created specifically to implement __holo__ and be used in Holoware.
-    - Holofunc: a __holo__ class method.
-    
-When writing any logging:
-    - We use the logging and rich libraries.
-    - Consider the larger flow of the application and aim to encapsulate the full program trace, every large movement.
-    - Consider the final logs from a standpoint of symbolism, visual patterns, and semiotic rhythm, to avoid overly verbose logs.
-    - Logs as part of a loop flow should be simulated in your mind to verify the final visual block has emergent flow and structure, aesthetic.
-    - Maximize the use of rich colors and text formatting for increase. Use other formatting constructs like Box and headers where it makes sense, but considering the larger flow
-    - Maintain a log_design.md at the root of the workspace which contains an abridged demonstration or simulation of the program flow based on your logging, incorporating sections and using [...] to highlight and compare possible juxtapositions.
-    - Be proactive about replacing and improving the logging.
+# General Context
+
+Errloom is a fork of Verifiers and we are renaming it into a standalone new project, in case there's any confusion.
+You can handle the renames as you come across them.
+
+# Coding Standard
+
+Never use kwargs unless there is a serious interest for an API design.
+
+# Work Standard
+
+Do not be afraid to ask questions.
+Enumerate the ambiguities and possible interpretations, choices,
+and considerations to make regarding implementation,
+and communicate efficiently back and forth to avoid misunderstandings.
+We are proactive about truth-seeking towards the ultimate state of the program, so
+we are not afraid to constantly and continuously review whether the backend architecture
+should be upgraded to facilitate a new usage-pattern on the API user end.
+
+Always check git status and diffs before making a commit.
+There may be other stuff than what we worked on.
+
+
+# Definitions
+
+- Holoware: a prompting program.
+- Holophore: an holowaric emmanation. (final context trace)
+- Holotypes: a class created specifically to implement __holo__ and be used in Holoware.
+- Holofunc: a __holo__ class method.
+
+
+# When writing any logging
+
+- We use the logging and rich libraries.
+- Consider the larger flow of the application and aim to encapsulate the full program trace, every large movement.
+- Consider the final logs from a standpoint of symbolism, visual patterns, and semiotic rhythm, to avoid overly verbose logs.
+- Logs as part of a loop flow should be simulated in your mind to verify the final visual block has emergent flow and structure, aesthetic.
+- Maximize the use of rich colors and text formatting for increase. Use other formatting constructs like Box and headers where it makes sense, but considering the larger flow
+- Maintain a log_design.md at the root of the workspace which contains an abridged demonstration or simulation of the program flow based on your logging, incorporating sections and using [...] to highlight and compare possible juxtapositions.
+- Be proactive about replacing and improving the logging.
 
 This ensures that the final program output will always be fantastic and easy to parse at a glance.
 
-Our Verifiers fork is being renamed to Errloom as its own standalone new project, in case there's any confusion.
-You can handle the renames as you come across them.
+
+# Commands
+
+Use uv for commands (uv run, uv pip, uv run pytest ...)
+
+Dry test to visualize how the holoware is running, using MockClient that returns MOCK instead of calling vllm
+> cd /home/nuck/Projects/thauthen && uv run train_compressor.py --dry-run
+
+Unit tests to verify the quality and consistency of the program.
+Recommended to run before all commits
+> uv run pytest -s

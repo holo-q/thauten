@@ -1,6 +1,11 @@
 import random
 from typing import List, Literal
 
+from pydantic import Field
+
+from errloom.attractor import Attractor
+from errloom.comm import CommModel
+
 class FidelityCritique(CommModel):
     """
     A structured representation of a fidelity evaluation, comparing an original
@@ -37,7 +42,7 @@ class FidelityAttractor(Attractor):
         fidelity = random.uniform(0, 5)
 
         decel = self.alpha * n_tokens + self.beta * (1 - fidelity)
-        gravity = self.base_score - decel
+        gravity = 1 - decel
         gravity = max(0.0, gravity)
 
         return gravity
