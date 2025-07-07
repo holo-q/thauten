@@ -137,7 +137,7 @@ def execute_dry_run(n: int):
 
     # --- 4. Manually trigger rollouts ---
     log(f"Generating {len(data)} sample contexts without running any models...")
-    env.unroll(data)
+    env.weave(data)
     log(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
 def train_compressor(model_path: str):
@@ -211,7 +211,7 @@ def train_compressor(model_path: str):
     loom = HolowareLoom(
         path="hol/compressor.hol",
         dataset=train_dataset,
-        eval_dataset=eval_dataset,
+        bench_data=eval_dataset,
         critique_class=FidelityCritique,
         alpha=alpha,
         beta=beta
