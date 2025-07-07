@@ -71,7 +71,7 @@ from rich.rule import Rule
 from rich.table import Table
 
 from errloom import CommModel, discovery
-from errloom.holoom import HolowareLoom
+from errloom.holoware_loom import HolowareLoom
 from thauten.fidelity_attractor import FidelityCritique
 from errloom.utils.model_utils import get_model_and_tokenizer
 
