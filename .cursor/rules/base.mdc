@@ -27,8 +27,11 @@ or implementation to ensure that we won't need to revert code or make more chang
 Use efficient language and symbolism to relay a vision, no need to get too verbose.
 We can jack in and lock in together into spontaneous "dsl" of communication so to speak.
 
-Always check git status and diffs before making a commit.
-There may be other stuff than what we worked on.
+
+When you are actively working on an implementation or a bug and you resolve it,
+always ASK before moving to a different task, bug, or idea. PROPOSE instead what
+are the next options. Absolutely do not under any circumstance jump to a different
+thing you were not asked to do.
 
 
 # Definitions
@@ -56,9 +59,22 @@ This ensures that the final program output will always be fantastic and easy to 
 
 Use uv for commands (uv run, uv pip, uv run pytest ...)
 
+The user may command you with these
+
+# run
+
 Dry test to visualize how the holoware is running, using MockClient that returns MOCK instead of calling vllm
 > cd /home/nuck/Projects/thauthen && uv run train_compressor.py --dry-run
+
+## test
 
 Unit tests to verify the quality and consistency of the program.
 Recommended to run before all commits
 > uv run pytest -s
+
+## commit
+
+Always check git status before making a commit.
+There may be other stuff than what we worked on.
+Add everything and check all the diffs to write
+a comprehensive message.

@@ -70,12 +70,10 @@ from rich import box
 from rich.rule import Rule
 from rich.table import Table
 
-from fidelity_attractor import FidelityCritique
+from errloom import CommModel, discovery
+from errloom.holoom import HolowareLoom
+from thauten.fidelity_attractor import FidelityCritique
 from errloom.utils.model_utils import get_model_and_tokenizer
-from errloom.holoom import HolowareLoom, logger
-from errloom.log import cl as c
-
-# Set up Rich logging to capture all logs
 
 # Suppress specific noisy loggers
 logging.getLogger("datasets").setLevel(logging.ERROR)
@@ -83,17 +81,21 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("torch").setLevel(logging.ERROR)
 logging.getLogger("accelerate").setLevel(logging.ERROR)
 
+logger = logging.getLogger("main")
+discovery.crawl_package("thauten", [CommModel])
+
 def log(*s):
-    c.print(s)
+    logger.info(s)
 
 def logc():
-    c.clear()
+    # c.clear()
+    pass
 
-def logl(s):
-    c.print(s)
-    c.print()
+def logl(*s):
+    logger.info(s)
+    logger.info("")
 
-def execute_dry_run():
+def execute_dry_run(n: int):
     """
     Handles the dry run logic entirely, without instantiating the trainer.
     """
@@ -110,15 +112,14 @@ def execute_dry_run():
         return
 
     # --- 2. Prepare a few samples ---
-    slice_size = 10
     try:
-        dataset_slice = list(dataset.take(slice_size))
-        if len(dataset_slice) < slice_size:
-            log(f"[yellow]Warning: Could only fetch {len(dataset_slice)} samples for the dry run.[/yellow]")
-        if not dataset_slice:
+        data = list(dataset.take(n))
+        if len(data) < n:
+            log(f"[yellow]Warning: Could only fetch {len(data)} samples for the dry run.[/yellow]")
+        if not data:
             log("[red]Not enough data in the training set to perform a dry run.[/red]")
             return
-        dataset_slice = ArrowDataset.from_list(dataset_slice)
+        data = ArrowDataset.from_list(data)
 
     except Exception as e:
         log(f"[red]❌ Failed to prepare samples for dry run: {e}[/red]")
@@ -127,7 +128,7 @@ def execute_dry_run():
     # --- 3. Create a Dry-Run-Specific Environment ---
     env = HolowareLoom(
         'compressor.hol',
-        dataset=dataset_slice,
+        dataset=data,
         critique_class=FidelityCritique,
         alpha=0.05,
         beta=1.5,
@@ -135,8 +136,8 @@ def execute_dry_run():
     )
 
     # --- 4. Manually trigger rollouts ---
-    log(f"Generating {len(dataset_slice)} sample contexts without running any models...")
-    env.unroll(dataset_slice)
+    log(f"Generating {len(data)} sample contexts without running any models...")
+    env.unroll(data)
     log(Rule("[yellow]DRY RUN COMPLETE[/]"))
 
 def train_compressor(model_path: str):
@@ -243,16 +244,17 @@ def main():
     parser = argparse.ArgumentParser(description="Symbolic Compressor Training")
     parser.add_argument("--dry-run", action="store_true", help="Run in dry run mode to see generated contexts without training.")
     parser.add_argument("--model-path", type=str, default="Qwen/Qwen3-4B", help="The path to the model to train.")
+    parser.add_argument("--n", type=int, default=10, help="How many dataset rows to process with the loom.")
     args = parser.parse_args()
 
     # Clear screen for full-screen experience
-    logc()
+    # logc()
     log(Rule("[bold cyan]🧠 Symbolic Compressor Training", style="cyan"))
 
     # --- Model Configuration ---
     # Determine data_key for the dry run env
     if args.dry_run:
-        execute_dry_run()
+        execute_dry_run(args.n)
         return
 
     # --- Normal Training Flow ---
@@ -280,8 +282,6 @@ def main():
         raise
 
 if __name__ == "__main__":
-    from errloom.holoware import Holoware
-    from errloom.attractors import BingoAttractor
     try:
         main()
     except KeyboardInterrupt:
