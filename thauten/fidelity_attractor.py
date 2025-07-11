@@ -1,10 +1,13 @@
+import logging
 import random
 from typing import List, Literal
 
 from pydantic import Field
 
+from errloom import Span
 from errloom.attractor import Attractor
 from errloom.comm import CommModel
+from errloom.holophore import Holophore
 
 class FidelityCritique(CommModel):
     """
@@ -18,6 +21,10 @@ class FidelityCritique(CommModel):
     acceptable_extensions: List[str] = Field(default=[], description="List of valid elaborations or extensions that don't contradict the original.")
     severity: Literal["MINOR", "MODERATE", "MAJOR"] = Field(description="The overall severity of the issues found.")
     quality: Literal["EXCELLENT", "GOOD", "FAIR", "POOR"] = Field(description="The overall quality of the decompression.")
+
+    def __holo__(self, phore:Holophore, span:Span) -> str:
+        """Special method for holoware to inject content. Returns a compact schema."""
+        return self.get_compact_schema(include_descriptions=True)
 
     @property
     def total_issues(self) -> int:

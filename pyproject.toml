@@ -3,26 +3,29 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rl"
+name = "errloom"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
- "openai",
- "transformers",
- "vllm",
- "datasets>=3.6.0",
- "reasoning-gym>=0.1.20",
- "rich>=14.0.0",
- "torch>=2.6.0",
- "ruff",
- "rich",
- "pytest"
+description = "Default template for PDM package"
+authors = [
+    {name = "cha", email = "cha@hol.ware"},
 ]
+dependencies = [
+    "torch>=2.3.1",
+    "numpy>=2.0.0",
+    "datasets>=2.20.0",
+    "openai>=1.35.13",
+    "rich>=13.7.1",
+    "pytest"
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
 
 [tool.setuptools]
 py-modules = ["main", "prompts", "train-compressor"]
 
 [tool.ruff]
 lint.ignore = ["F541"]
+
+[tool.pdm]
+distribution = false

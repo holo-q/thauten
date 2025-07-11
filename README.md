@@ -2,7 +2,7 @@
 
 **Thauten** /θɔːˈtiːn/ – *"That which folds and unfolds thought within itself."*
 
-An experimental reinforcement learning project testing the Semiodynamics Framework through the evolution of reasoner models using GRPO and Prime Intellect's [Verifiers](https://github.com/willccbb/verifiers) library.
+Blue-sky research into novel applications of reinforcement learning in LLM as universal function approximators. Center to thauthen is the goal to prove the semiodynamics hypothesisk through the evolution of reasoner models using the [Errloom](https://github.com/holo-q/errloom) library for reinforcement learning reunited with context/prompt engineering. The primary objective is to develop methodologies to train open-source super-intelligence models.
 
 ## Capability Objectives
 

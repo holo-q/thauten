@@ -1,0 +1,32 @@
+# This is a wrapper around compressor-teacher with an outer optimization loop
+# Training the model to generate text samples for the compressor with increasing
+# difficulty.
+#
+# TODO we need a new span to call the compressor holoware
+# TODO add $id as a shorthand to <|id|> which doesn't wrap in <obj id=id>...</obj>
+# TODO remove <> prefix for <think>, it's superfluous and can be the argument for ego spans
+# TODO possibly add ? suffix for conditional ObjSpan
+# TODO STATS to insert training history (loss, fidelity, etc.) of inner loop (statistics data structure written to by certain other spans, tracked by grpo training state not loom or rollout) (does not print anything if the stat is not yet written to)
+# TODO GRPO span for nested training loops.
+# TODO WARE span for calling other holoware
+
+<|+++|>
+<|o_o|>
+You are training a model to compress and decompress text losslessly
+along the semantic and information-theoretic dimensions rather than
+the syntactic and grammatical dimension. The model will be trained to
+compress and decompress text losslessly using your own input samples.
+
+<|STATS:inner|> 
+<|@_@ think|>
+<|GRPO:inner|>
+    <|compressor.hol|>
+
+<|===|>
+
+Let's now review the compressor's performance.
+<|@_@ think|>
+
+
+<|+++|>
+# TODO any post-training analysis? dunno if we need it
